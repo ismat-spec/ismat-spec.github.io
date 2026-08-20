@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S&P 500 Trend-Following Backtester — Ismat Allam</title>
+<meta name="description" content="Case study: a Python backtesting engine testing trend-following against buy-and-hold on 155 years of real S&P 500 data.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="../index.html">Ismat Allam<span>.</span></a>
+    <div class="nav-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="social" href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a class="social" href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</nav>
+
+<header class="case-hero">
+  <div class="wrap">
+    <span class="tag">Personal project · Quantitative finance</span>
+    <h1>S&amp;P 500 Trend-Following Backtester</h1>
+    <p class="lead">Does a simple trend rule beat holding the market? I built a small quantitative
+    backtesting engine in Python and put the question to real S&amp;P 500 data reaching back to
+    1871 — with the headline comparison run on 1,829 months of total returns, dividends included.</p>
+    <div class="meta">
+      <div><b>Type</b><span>Personal project, solo</span></div>
+      <div><b>Data</b><span>Shiller S&amp;P 500 monthly, 1871–2026</span></div>
+      <div><b>Stack</b><span>Python · pandas · matplotlib</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:26px;">
+      <a class="btn" href="https://github.com/ismat-spec/sp500-trend-backtester" target="_blank" rel="noopener">View source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="case-body wrap">
+
+  <section class="case-section">
+    <h2><span class="num">1</span>Project Scope &amp; Problem</h2>
+    <p>Trend-following is one of the oldest ideas in quantitative investing: stay in the market
+    while it is trending up, step aside when it turns down. It sounds sensible — but does it
+    actually survive contact with data, or does it just trade away returns in false alarms? Most
+    online backtests answer this over 10 or 20 convenient years, which proves very little.</p>
+    <p>I set out to test it properly: over the longest quality dataset available for equities —
+    Prof. Robert Shiller's monthly S&amp;P 500 series going back to 1871 — with the accounting
+    details handled honestly (dividends, interest on cash, no look-ahead), so that the result
+    reflects the strategy and not a bug in the backtest.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">2</span>My Role &amp; Solution</h2>
+    <p>Solo project: I designed and wrote the whole engine. It is a small, readable Python package
+    where each concern lives in its own module — data loading and cleaning, strategy rules,
+    the portfolio engine, performance metrics, and charting. A strategy is just a function that
+    turns a price series into a 0-or-1 position series, so adding a new idea is a few lines.</p>
+    <p>Two classic rules are tested against the buy-and-hold benchmark: <strong style="color:var(--ink)">SMA-10</strong>
+    (invested while the index sits above its 10-month moving average) and
+    <strong style="color:var(--ink)">12-month momentum</strong> (invested while the trailing
+    12-month return is positive). While a strategy is out of the market, its cash earns the
+    long-term interest rate from the same dataset — parking money at 0% would quietly rig the
+    test against sitting out.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">3</span>Work Process</h2>
+    <p>The interesting work in backtesting is refusing to fool yourself. Three decisions mattered
+    most:</p>
+    <ul>
+      <li><strong style="color:var(--ink)">No look-ahead bias.</strong> A signal computed on this
+      month's close can only be traded <em>next</em> month — every strategy shifts its positions
+      by one period. Skipping that single line of code inflates results and is the most common
+      backtesting mistake.</li>
+      <li><strong style="color:var(--ink)">Dividends included.</strong> The headline run uses total
+      returns. A price-only comparison flatters market-timing, because the timing strategies earn
+      interest while in cash, yet buy-and-hold's dividends are silently dropped. Building both
+      modes and seeing the gap between them was the best lesson in the project.</li>
+      <li><strong style="color:var(--ink)">Cleaning real data.</strong> The source publishes prices
+      promptly but dividends and rates with a lag, padding recent months with zeros — which would
+      read as "the S&amp;P suddenly stopped paying dividends" if taken literally. The loader
+      treats those zeros as missing and truncates the total-return study where the dividend
+      record genuinely ends.</li>
+    </ul>
+    <figure>
+      <img src="../assets/img/signal_zoom.png" alt="S&P 500 price and its 10-month moving average from 1997 to 2012, with out-of-market periods shaded during the dot-com and 2008 crashes" loading="lazy">
+      <figcaption>The rule in action around the two great modern crashes: shaded spans are months
+      spent in cash. The filter exits within months of the dot-com and 2008 peaks and re-enters
+      as each recovery establishes itself.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">4</span>Outcome &amp; Results</h2>
+    <p>Over 152 years of total returns, both trend rules beat buy-and-hold — but the headline
+    number is not the point. The point is the <em>risk</em> column: both rules roughly halve
+    volatility and cut the worst peak-to-trough loss from −82% (the 1930s) to about −40%,
+    while being invested only 63% of the time.</p>
+
+    <table class="results">
+      <tr><th></th><th>Buy &amp; Hold</th><th>SMA-10</th><th>12M Momentum</th></tr>
+      <tr><td>CAGR</td><td>9.17%</td><td class="hl">11.08%</td><td>10.12%</td></tr>
+      <tr><td>Volatility</td><td>14.07%</td><td class="hl">9.41%</td><td>9.67%</td></tr>
+      <tr><td>Sharpe ratio</td><td>0.38</td><td class="hl">0.69</td><td>0.58</td></tr>
+      <tr><td>Max drawdown</td><td>−81.8%</td><td class="hl">−41.0%</td><td>−36.7%</td></tr>
+      <tr><td>Time in market</td><td>100%</td><td>63%</td><td>63%</td></tr>
+      <tr><td>Trades</td><td>0</td><td>207</td><td>127</td></tr>
+    </table>
+
+    <figure>
+      <img src="../assets/img/equity_curves.png" alt="Log-scale equity curves 1871 to 2023: SMA-10 trend grows one dollar to about 9 million times, momentum 2.4 million, buy and hold 642 thousand" loading="lazy">
+      <figcaption>Growth of $1 since 1871 (log scale, nominal, dividends reinvested).</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/drawdowns.png" alt="Drawdown chart: buy and hold falls 82 percent in the 1930s while both trend strategies stay near 40 percent at worst" loading="lazy">
+      <figcaption>Every drawdown since 1871. Trend-following's real value shows in the deep bear
+      markets — 1929–32, 1973–74, 2000–02, 2008 — where stepping aside turns catastrophic losses
+      into survivable ones.</figcaption>
+    </figure>
+
+    <div class="callout"><strong style="color:var(--ink)">Honest limitations.</strong> No
+    transaction costs or taxes are modelled (207 trades in 152 years ≈ 1.4 per year, so the drag
+    is small but real); Shiller's prices are monthly averages, which smooths the series; and one
+    and a half centuries of US history is still a single sample path. This is an analysis of the
+    past, not investment advice — and saying so is part of doing quant work properly.</div>
+  </section>
+
+  <div class="pager">
+    <a class="btn" href="safety-monitoring.html">← Prev: Safety Monitor</a>
+    <a class="btn" href="pathfinding-visualizer.html">Next: Pathfinding Visualiser →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
+    </div>
+    <div>© 2026 Ismat Allam · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic</div>
+  </div>
+</footer>
+
+</body>
+</html>

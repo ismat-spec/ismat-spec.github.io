@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathfinding Visualiser — Ismat Allam</title>
+<meta name="description" content="Case study: an interactive pathfinding visualiser — A*, Dijkstra, BFS and Greedy Best-First animated on a grid, built in vanilla JavaScript.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="../index.html">Ismat Allam<span>.</span></a>
+    <div class="nav-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="social" href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a class="social" href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</nav>
+
+<header class="case-hero">
+  <div class="wrap">
+    <span class="tag">Personal project · Software engineering</span>
+    <h1>Pathfinding Visualiser</h1>
+    <p class="lead">Four classic search algorithms — A*, Dijkstra, Breadth-First Search and Greedy
+    Best-First — animated live on an interactive grid. Draw walls, add slow terrain, generate a
+    maze, and watch each algorithm think. Built from scratch in vanilla JavaScript, no libraries.</p>
+    <div class="meta">
+      <div><b>Type</b><span>Personal project, solo</span></div>
+      <div><b>Stack</b><span>JavaScript · HTML · CSS — zero dependencies</span></div>
+      <div><b>Try it</b><span>Runs right here in your browser</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:26px;">
+      <a class="btn primary" href="pathfinding/index.html">▶ Launch the live demo</a>
+      <a class="btn" href="https://github.com/ismat-spec/pathfinding-visualiser" target="_blank" rel="noopener">View source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="case-body wrap">
+
+  <section class="case-section">
+    <h2><span class="num">1</span>Project Scope &amp; Problem</h2>
+    <p>Pathfinding is everywhere — game characters navigating a map, delivery routing, robot
+    vacuum cleaners, network packets. The algorithms behind it are a core part of computer
+    science, but taught on paper they stay abstract: it is hard to <em>feel</em> why A* is clever
+    or where Greedy Best-First goes wrong just by reading pseudocode.</p>
+    <p>My goal was to build the explanation I wished I'd had: an interactive playground where the
+    search is animated cell by cell, where you can build your own obstacle course, and where the
+    numbers — cells visited, path cost, compute time — let you compare algorithms like an
+    engineer rather than take the textbook's word for it. As a browser app with no install, it
+    also had to be something anyone can try in one click.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">2</span>My Role &amp; Solution</h2>
+    <p>Solo build, everything from scratch: the grid engine, the four algorithms, the animation
+    system and the UI. I deliberately used no frameworks or libraries — the whole app is one
+    hand-written HTML/CSS/JavaScript file — because the point was to demonstrate the fundamentals,
+    including the data structures (the priority queue is a hand-rolled binary min-heap).</p>
+    <p>The grid supports walls (impassable) and "sand" (passable but costing 5 instead of 1),
+    which is what makes the algorithm comparison interesting: Dijkstra and A* route around
+    expensive terrain, while BFS — which counts steps, not cost — ploughs straight through it and
+    proudly reports a worse path. A recursive-division maze generator provides an instant
+    challenge, and start and target are draggable.</p>
+    <figure>
+      <img src="../assets/img/pathfinding_astar.png" alt="The visualiser after an A* run: blue visited cells and an orange shortest path threading through a generated maze" loading="lazy">
+      <figcaption>A* on a generated maze: 383 cells visited to find a 113-step shortest path in
+      3.2 ms. On the same maze, plain BFS visits 448 cells — the heuristic is doing real work.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">3</span>Work Process</h2>
+    <p>The design decision I'm most pleased with is the strict separation between
+    <em>search</em> and <em>animation</em>. Each algorithm runs to completion first, pure and
+    synchronous, returning the visit order and parent pointers without touching the page. The
+    animation layer then replays that record at whatever speed the user chose. This kept the
+    algorithms textbook-clean, made the compute-time stat honest (it measures the search, not the
+    drawing), and meant one animation system serves all four algorithms.</p>
+    <p>All four searches share one engine with a swappable priority function — Dijkstra orders its
+    frontier by cost-so-far, A* by cost-plus-heuristic (Manhattan distance), Greedy by heuristic
+    alone, and BFS by arrival order. Seeing them as the same loop with different priorities was
+    the real lesson of the project. The finishing work was interaction detail: pointer events so
+    wall-drawing works with mouse and touch, a run token so restarting mid-animation cancels
+    cleanly, and a colour scheme checked for colour-blind separation between the visited,
+    frontier and path layers.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">4</span>Outcome &amp; Results</h2>
+    <p>The finished app does exactly what I set out to make: a one-click, install-free playground
+    where the differences between the algorithms stop being theory. Race them on the same maze
+    and the stats tell the story — A* reaches the target visiting roughly 15% fewer cells than BFS;
+    Greedy finishes fastest but returns visibly longer paths; BFS ignores sand and pays for it in
+    path cost. Searches on the 1,012-cell grid complete in tens of milliseconds, so the animation
+    speed is purely a teaching control.</p>
+    <p>It also became the most demonstrable thing in my portfolio: it runs live inside this site,
+    on any device, with nothing to install. <a href="pathfinding/index.html">Try it yourself</a> —
+    generate a maze, run A*, then switch to Greedy Best-First and watch it get greedy.</p>
+  </section>
+
+  <div class="pager">
+    <a class="btn" href="quant-backtester.html">← Prev: S&amp;P 500 Backtester</a>
+    <a class="btn primary" href="pathfinding/index.html">▶ Launch the live demo</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
+    </div>
+    <div>© 2026 Ismat Allam · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathfinding Visualiser — Ismat Allam</title>
+<style>
+  :root{
+    --page:#0d0d0d; --surface:#1a1a19; --card:#212120;
+    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --hairline:rgba(255,255,255,0.10); --grid:#2c2c2a;
+    --accent:#3987e5;
+    --cell:#1f1f1e; --wall:#5c5b54; --sand:#7a6433;
+    --frontier:#86b6ef; --visited:#1c5cab; --path:#eda100;
+    --start:#0ca30c; --end:#d03b3b;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--page); color:var(--ink2);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px;
+  }
+  header{width:100%; max-width:1080px; margin-bottom:18px;}
+  header .crumb{font-size:13px; color:var(--muted); margin-bottom:6px;}
+  header .crumb a{color:var(--accent); text-decoration:none;}
+  h1{color:var(--ink); font-size:26px; letter-spacing:-0.02em;}
+  header p{margin-top:6px; font-size:14.5px; max-width:70ch;}
+
+  .toolbar{
+    width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:10px;
+    align-items:center; background:var(--surface); border:1px solid var(--hairline);
+    border-radius:12px; padding:12px 14px; margin-bottom:12px;
+  }
+  .toolbar label{font-size:13px; color:var(--muted);}
+  select,button{
+    background:var(--card); color:var(--ink2); border:1px solid var(--hairline);
+    border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer;
+  }
+  select:hover,button:hover{border-color:rgba(255,255,255,0.25); color:var(--ink);}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600;}
+  button.primary:hover{filter:brightness(1.1);}
+  button.tool.active{border-color:var(--accent); color:var(--ink); box-shadow:inset 0 0 0 1px var(--accent);}
+  input[type=range]{accent-color:var(--accent); width:110px;}
+  .spacer{flex:1;}
+
+  .stats{
+    width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;
+  }
+  .stat{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:10px;
+    padding:8px 14px; font-size:13px; color:var(--muted);
+  }
+  .stat b{color:var(--ink); font-size:16px; margin-left:6px; font-weight:600;}
+
+  #board{
+    display:grid; gap:1px; background:var(--grid); border:1px solid var(--hairline);
+    border-radius:10px; overflow:hidden; touch-action:none; user-select:none;
+    width:100%; max-width:1080px;
+  }
+  .cell{background:var(--cell); aspect-ratio:1/1; position:relative;}
+  .cell.wall{background:var(--wall);}
+  .cell.sand{background:var(--sand);}
+  .cell.frontier{background:var(--frontier);}
+  .cell.visited{background:var(--visited); animation:pop .3s ease;}
+  .cell.path{background:var(--path); animation:pop .25s ease;}
+  .cell.start::after,.cell.end::after{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:#fff; font-weight:700;
+  }
+  .cell.start{background:var(--start);} .cell.start::after{content:"▶";}
+  .cell.end{background:var(--end);}     .cell.end::after{content:"◎";}
+  @keyframes pop{from{transform:scale(.4); border-radius:50%;} to{transform:scale(1);}}
+
+  .legend{
+    width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:14px;
+    margin-top:12px; font-size:13px; color:var(--muted);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .chip{width:13px; height:13px; border-radius:3px; display:inline-block;}
+
+  details{
+    width:100%; max-width:1080px; margin-top:20px; background:var(--surface);
+    border:1px solid var(--hairline); border-radius:12px; padding:14px 18px;
+  }
+  summary{cursor:pointer; color:var(--ink); font-weight:600; font-size:15px;}
+  details p{margin-top:10px; font-size:14px; line-height:1.55;}
+  details b{color:var(--ink2);}
+  footer{margin-top:26px; font-size:13px; color:var(--muted);}
+  footer a{color:var(--accent); text-decoration:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="crumb"><a href="../pathfinding-visualizer.html">← Back to project page</a></div>
+  <h1>Pathfinding Visualiser</h1>
+  <p>Watch four classic search algorithms find their way. <b>Drag on the grid</b> to draw walls,
+     pick a tool to add slow “sand” terrain (cost&nbsp;5), drag the start ▶ and target ◎, then hit
+     <b>Visualise</b>.</p>
+</header>
+
+<div class="toolbar">
+  <label>Algorithm</label>
+  <select id="algo">
+    <option value="astar">A* (Manhattan heuristic)</option>
+    <option value="dijkstra">Dijkstra</option>
+    <option value="bfs">Breadth-First Search</option>
+    <option value="greedy">Greedy Best-First</option>
+  </select>
+  <label>Speed</label>
+  <input type="range" id="speed" min="0" max="30" value="12">
+  <button class="tool active" id="toolWall">✏ Wall</button>
+  <button class="tool" id="toolSand">▨ Sand</button>
+  <button class="tool" id="toolErase">⌫ Erase</button>
+  <span class="spacer"></span>
+  <button id="maze">Generate maze</button>
+  <button id="clearPath">Clear path</button>
+  <button id="clearAll">Clear board</button>
+  <button class="primary" id="run">▶ Visualise</button>
+</div>
+
+<div class="stats">
+  <div class="stat">Visited<b id="sVisited">–</b></div>
+  <div class="stat">Path cost<b id="sCost">–</b></div>
+  <div class="stat">Path length<b id="sLen">–</b></div>
+  <div class="stat">Compute time<b id="sTime">–</b></div>
+  <div class="stat" id="sNote" style="display:none; color:var(--ink2);"></div>
+</div>
+
+<div id="board" aria-label="pathfinding grid"></div>
+
+<div class="legend">
+  <span><span class="chip" style="background:var(--start)"></span>Start</span>
+  <span><span class="chip" style="background:var(--end)"></span>Target</span>
+  <span><span class="chip" style="background:var(--wall)"></span>Wall (impassable)</span>
+  <span><span class="chip" style="background:var(--sand)"></span>Sand (cost 5)</span>
+  <span><span class="chip" style="background:var(--frontier)"></span>Frontier</span>
+  <span><span class="chip" style="background:var(--visited)"></span>Visited</span>
+  <span><span class="chip" style="background:var(--path)"></span>Shortest path</span>
+</div>
+
+<details>
+  <summary>How the algorithms differ</summary>
+  <p><b>Dijkstra</b> expands outward in order of cheapest total cost from the start — it is
+  guaranteed optimal, but explores in every direction. <b>A*</b> adds a heuristic (here the
+  Manhattan distance to the target) so it pushes toward the goal first while staying optimal —
+  usually visiting far fewer cells. <b>Breadth-First Search</b> treats every step as equal, so it
+  finds the fewest-steps path but ignores terrain cost — watch it plough straight through sand.
+  <b>Greedy Best-First</b> chases the heuristic alone: very fast, but the path it finds can be
+  noticeably longer. Try each on the same maze and compare the visited count and path cost.</p>
+</details>
+
+<footer>Built with vanilla JavaScript — no libraries. Part of <a href="../../index.html">Ismat Allam's portfolio</a>.</footer>
+
+<script>
+"use strict";
+/* ---------- grid setup ---------- */
+const board = document.getElementById("board");
+const COLS = 46, ROWS = 22, SAND_COST = 5;
+board.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
+
+const cells = [];            // DOM nodes
+const type  = [];            // "open" | "wall" | "sand"
+let startId = idx(5, Math.floor(ROWS/2));
+let endId   = idx(COLS-6, Math.floor(ROWS/2));
+let runToken = 0;            // bump to cancel a running animation
+
+function idx(c,r){ return r*COLS+c; }
+function colOf(i){ return i%COLS; }
+function rowOf(i){ return Math.floor(i/COLS); }
+
+for(let i=0;i<COLS*ROWS;i++){
+  const d = document.createElement("div");
+  d.className = "cell"; d.dataset.i = i;
+  board.appendChild(d); cells.push(d); type.push("open");
+}
+paintEndpoints();
+
+function paintEndpoints(){
+  cells.forEach(c=>c.classList.remove("start","end"));
+  cells[startId].classList.add("start");
+  cells[endId].classList.add("end");
+}
+
+/* ---------- drawing (mouse + touch via pointer events) ---------- */
+let tool = "wall", dragging = false, movingNode = null;
+const toolBtns = {wall:toolWall, sand:toolSand, erase:toolErase};
+for(const [name,btn] of Object.entries(toolBtns)){
+  btn.onclick = ()=>{ tool = name;
+    Object.values(toolBtns).forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+  };
+}
+function applyTool(i){
+  if(i===startId || i===endId) return;
+  type[i] = tool==="wall" ? "wall" : tool==="sand" ? "sand" : "open";
+  cells[i].className = "cell" + (type[i]!=="open" ? " "+type[i] : "");
+}
+board.addEventListener("pointerdown", e=>{
+  const t = e.target.closest(".cell"); if(!t) return;
+  const i = +t.dataset.i;
+  dragging = true;
+  if(i===startId) movingNode="start";
+  else if(i===endId) movingNode="end";
+  else { movingNode=null; applyTool(i); }
+});
+board.addEventListener("pointermove", e=>{
+  if(!dragging) return;
+  const el = document.elementFromPoint(e.clientX,e.clientY);
+  const t = el && el.closest(".cell"); if(!t) return;
+  const i = +t.dataset.i;
+  if(movingNode==="start" && i!==endId && type[i]!=="wall"){ startId=i; paintEndpoints(); }
+  else if(movingNode==="end" && i!==startId && type[i]!=="wall"){ endId=i; paintEndpoints(); }
+  else if(!movingNode) applyTool(i);
+});
+window.addEventListener("pointerup", ()=>{ dragging=false; movingNode=null; });
+
+/* ---------- tiny binary min-heap ---------- */
+class Heap{
+  constructor(){ this.a=[]; }
+  push(x){ const a=this.a; a.push(x); let i=a.length-1;
+    while(i>0){ const p=(i-1)>>1; if(a[p][0]<=a[i][0]) break; [a[p],a[i]]=[a[i],a[p]]; i=p; } }
+  pop(){ const a=this.a, top=a[0], last=a.pop();
+    if(a.length){ a[0]=last; let i=0;
+      for(;;){ let l=2*i+1, r=l+1, m=i;
+        if(l<a.length && a[l][0]<a[m][0]) m=l;
+        if(r<a.length && a[r][0]<a[m][0]) m=r;
+        if(m===i) break; [a[m],a[i]]=[a[i],a[m]]; i=m; } }
+    return top; }
+  get size(){ return this.a.length; }
+}
+
+/* ---------- search algorithms ----------
+   Each returns {visitedOrder, parent, found, cost} without touching the DOM,
+   so the animation layer stays completely separate from the algorithm. */
+function neighbors(i){
+  const c=colOf(i), r=rowOf(i), out=[];
+  if(r>0) out.push(i-COLS); if(r<ROWS-1) out.push(i+COLS);
+  if(c>0) out.push(i-1);    if(c<COLS-1) out.push(i+1);
+  return out.filter(n=>type[n]!=="wall");
+}
+const stepCost = i => type[i]==="sand" ? SAND_COST : 1;
+const manhattan = (a,b)=> Math.abs(colOf(a)-colOf(b)) + Math.abs(rowOf(a)-rowOf(b));
+
+function search(kind){
+  const N=COLS*ROWS;
+  const dist = new Float64Array(N).fill(Infinity);
+  const parent = new Int32Array(N).fill(-1);
+  const done = new Uint8Array(N);
+  const visitedOrder = [];
+  dist[startId]=0;
+
+  const useHeap = kind!=="bfs";
+  const heap = new Heap(); const queue=[startId];
+  const priority = i =>
+    kind==="astar"    ? dist[i]+manhattan(i,endId) :
+    kind==="greedy"   ? manhattan(i,endId) :
+    /* dijkstra */      dist[i];
+  if(useHeap) heap.push([priority(startId),startId]);
+
+  while(useHeap ? heap.size : queue.length){
+    const i = useHeap ? heap.pop()[1] : queue.shift();
+    if(done[i]) continue;
+    done[i]=1; visitedOrder.push(i);
+    if(i===endId) return {visitedOrder,parent,found:true,cost:dist[i]};
+    for(const n of neighbors(i)){
+      if(done[n]) continue;
+      const nd = dist[i] + (kind==="bfs" ? 1 : stepCost(n));
+      if(kind==="bfs"){
+        if(dist[n]===Infinity){ dist[n]=nd; parent[n]=i; queue.push(n); }
+      } else if(nd < dist[n]){
+        dist[n]=nd; parent[n]=i; heap.push([priority(n),n]);
+      }
+    }
+  }
+  return {visitedOrder,parent,found:false,cost:Infinity};
+}
+
+/* ---------- animation ---------- */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function clearPathPaint(){
+  cells.forEach((c,i)=>c.classList.remove("visited","frontier","path"));
+  sVisited.textContent=sCost.textContent=sLen.textContent=sTime.textContent="–";
+  sNote.style.display="none";
+}
+async function visualize(){
+  clearPathPaint();
+  const myToken = ++runToken;
+  const kind = algo.value;
+  const t0 = performance.now();
+  const {visitedOrder,parent,found,cost} = search(kind);
+  const computeMs = (performance.now()-t0).toFixed(1);
+
+  const delay = 31 - +speed.value;   // slider right = faster
+  for(let k=0;k<visitedOrder.length;k++){
+    if(runToken!==myToken) return;
+    const i=visitedOrder[k];
+    if(i!==startId && i!==endId){
+      cells[i].classList.add("frontier");
+      ((j)=>setTimeout(()=>{ if(runToken!==myToken) return;
+        cells[j].classList.remove("frontier"); cells[j].classList.add("visited"); },90))(i);
+    }
+    sVisited.textContent=k+1;
+    if(delay>1 && k%1===0) await sleep(delay);
+    else if(k%8===0) await sleep(0);
+  }
+  if(runToken!==myToken) return;
+
+  if(!found){
+    sNote.textContent="No path exists — the target is walled off.";
+    sNote.style.display="block"; sTime.textContent=computeMs+" ms";
+    return;
+  }
+  // walk parents back from the target, then animate start -> target
+  const path=[]; for(let i=endId; i!==-1; i=parent[i]) path.push(i);
+  path.reverse();
+  // BFS ignores terrain cost, so report the real cost of the path it chose
+  const realCost = path.slice(1).reduce((s,i)=>s+stepCost(i),0);
+  for(const i of path){
+    if(runToken!==myToken) return;
+    if(i!==startId && i!==endId) cells[i].classList.add("path");
+    await sleep(Math.max(delay,8));
+  }
+  sCost.textContent = realCost;
+  sLen.textContent = path.length-1;
+  sTime.textContent = computeMs+" ms";
+}
+run.onclick = visualize;
+clearPath.onclick = ()=>{ runToken++; clearPathPaint(); };
+clearAll.onclick = ()=>{ runToken++; clearPathPaint();
+  for(let i=0;i<type.length;i++){ type[i]="open"; cells[i].className="cell"; }
+  paintEndpoints();
+};
+
+/* ---------- maze: recursive division ---------- */
+function maze(){
+  runToken++; clearPathPaint();
+  for(let i=0;i<type.length;i++){ type[i]="open"; cells[i].className="cell"; }
+  const setWall=(c,r)=>{ const i=idx(c,r); if(i!==startId&&i!==endId){ type[i]="wall"; } };
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  // Recursive division with a global parity rule: walls only on ODD grid
+  // lines, passages only on EVEN ones. That guarantees a later wall can
+  // never seal an earlier passage, so every cell stays reachable.
+  function divide(x,y,w,h){
+    const oddRows=[], oddCols=[];
+    for(let r=y+1;r<y+h-1;r++) if(r%2===1) oddRows.push(r);
+    for(let c=x+1;c<x+w-1;c++) if(c%2===1) oddCols.push(c);
+    const canH = oddRows.length>0, canV = oddCols.length>0;
+    if(!canH && !canV) return;
+    const horizontal = canH && (!canV || (h>w ? true : w>h ? false : Math.random()<0.5));
+    if(horizontal){
+      const wy = pick(oddRows);
+      const holes=[]; for(let c=x;c<x+w;c++) if(c%2===0) holes.push(c);
+      const hole = pick(holes);
+      for(let c=x;c<x+w;c++) if(c!==hole) setWall(c,wy);
+      divide(x,y,w,wy-y); divide(x,wy+1,w,y+h-wy-1);
+    }else{
+      const wx = pick(oddCols);
+      const holes=[]; for(let r=y;r<y+h;r++) if(r%2===0) holes.push(r);
+      const hole = pick(holes);
+      for(let r=y;r<y+h;r++) if(r!==hole) setWall(wx,r);
+      divide(x,y,wx-x,h); divide(wx+1,y,x+w-wx-1,h);
+    }
+  }
+  divide(0,0,COLS,ROWS);
+  for(let i=0;i<type.length;i++) if(type[i]==="wall") cells[i].classList.add("wall");
+  paintEndpoints();
+}
+document.getElementById("maze").onclick = maze;
+</script>
+</body>
+</html>
