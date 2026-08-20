@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Worker Safety Monitor — Ismat Allam</title>
+<meta name="description" content="Case study: a wearable fall, slip-trip-fall and near-miss detection system built with the Arduino Nesso N1, Python, MariaDB and Streamlit.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="../index.html">Ismat Allam<span>.</span></a>
+    <div class="nav-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="social" href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a class="social" href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</nav>
+
+<header class="case-hero">
+  <div class="wrap">
+    <span class="tag">EG2A17 Data Engineering Project</span>
+    <h1>Construction Worker Safety Monitor</h1>
+    <p class="lead">A wearable system that watches how a construction worker moves and raises an
+    alert the moment the movement looks like a fall, a slip-trip-fall, or a near miss —
+    built end-to-end from the sensor on the body to the dashboard on the screen.</p>
+    <div class="meta">
+      <div><b>Module</b><span>EG2A17, Nanyang Polytechnic</span></div>
+      <div><b>Team</b><span>4 members · Group 4</span></div>
+      <div><b>My focus</b><span>Data pipeline &amp; detection engine</span></div>
+      <div><b>Stack</b><span>Arduino Nesso N1 · BLE · Python · MariaDB · Streamlit</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:26px;">
+      <a class="btn" href="https://github.com/ismat-spec/dep" target="_blank" rel="noopener">View source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="case-body wrap">
+
+  <section class="case-section">
+    <h2><span class="num">1</span>Project Scope &amp; Problem</h2>
+    <p>Construction sites are among the most dangerous places to work in Singapore. In the
+    Ministry of Manpower's 2025 national workplace safety statistics, construction was the top
+    sector for workplace deaths with 13 fatalities; falls from height stayed among the top three
+    causes of death, and slips, trips and falls caused the most major injuries — roughly 39% of
+    them. The Workplace Safety and Health Institute posed this exact challenge on IMDA's Open
+    Innovation Platform, which is where our project brief came from.</p>
+    <p>The practical gap is supervision. A supervisor cannot watch every worker across a large
+    site at once, and a fall can happen and end in seconds. Worse, <em>near misses</em> — a
+    worker stumbling but catching themselves — are early warnings of unsafe conditions, yet they
+    usually go unreported because nothing visibly happened. Existing systems catch only severe
+    falls; the warning signs before them are lost.</p>
+    <p>Our scope: build a working prototype that continuously monitors a worker's movement with a
+    wearable sensor, automatically detects falls, slip-trip-falls (STF) and near misses, stores
+    everything for later review, and surfaces live alerts a supervisor can act on.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">2</span>My Role &amp; Solution</h2>
+    <p>This was a four-person team project. I focused on the data engineering core: receiving the
+    Bluetooth sensor stream in Python, validating and storing the readings, designing the
+    fall-detection state machine, and wiring the results into the live dashboard my teammates and
+    I used for the demo.</p>
+    <p>The worker carries an Arduino Nesso N1, whose built-in IMU measures three-axis acceleration
+    and three-axis rotation 100 times per second. The readings stream over Bluetooth Low Energy to
+    a site computer, where a Python application validates each packet, computes movement features,
+    runs the detection logic, and writes everything to a database. A Streamlit dashboard reads
+    from the same database and shows live sensor trends, event history and active alerts.</p>
+
+    <figure>
+      <svg viewBox="0 0 960 240" role="img" aria-label="System architecture: Nesso N1 to BLE to Python pipeline to database to dashboard" style="width:100%; height:auto;">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#898781"/>
+          </marker>
+        </defs>
+        <!-- device -->
+        <rect x="8" y="60" width="152" height="104" rx="12" fill="#1f1f1e" stroke="rgba(255,255,255,0.14)"/>
+        <text x="84" y="102" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" font-family="system-ui,sans-serif">Arduino Nesso N1</text>
+        <text x="84" y="124" fill="#898781" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">6-axis IMU · worn</text>
+        <text x="84" y="140" fill="#898781" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">by the worker</text>
+        <!-- arrow 1 -->
+        <line x1="164" y1="112" x2="206" y2="112" stroke="#898781" stroke-width="1.6" marker-end="url(#arr)"/>
+        <text x="185" y="98" fill="#c3c2b7" font-size="11" text-anchor="middle" font-family="system-ui,sans-serif">BLE</text>
+        <text x="185" y="134" fill="#898781" font-size="10" text-anchor="middle" font-family="system-ui,sans-serif">100 Hz</text>
+        <!-- python -->
+        <rect x="210" y="46" width="292" height="132" rx="12" fill="#1f1f1e" stroke="rgba(255,255,255,0.14)"/>
+        <text x="356" y="76" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" font-family="system-ui,sans-serif">Python application</text>
+        <rect x="226" y="94" width="82" height="30" rx="8" fill="rgba(57,135,229,0.14)"/>
+        <text x="267" y="113" fill="#3987e5" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">validate</text>
+        <rect x="316" y="94" width="82" height="30" rx="8" fill="rgba(57,135,229,0.14)"/>
+        <text x="357" y="113" fill="#3987e5" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">features</text>
+        <rect x="406" y="94" width="82" height="30" rx="8" fill="rgba(57,135,229,0.14)"/>
+        <text x="447" y="113" fill="#3987e5" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">detect</text>
+        <text x="356" y="152" fill="#898781" font-size="11" text-anchor="middle" font-family="system-ui,sans-serif">state machine: free fall → impact → stillness</text>
+        <!-- arrow 2 -->
+        <line x1="506" y1="112" x2="548" y2="112" stroke="#898781" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- db -->
+        <rect x="552" y="60" width="176" height="104" rx="12" fill="#1f1f1e" stroke="rgba(255,255,255,0.14)"/>
+        <text x="640" y="98" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" font-family="system-ui,sans-serif">MariaDB / SQLite</text>
+        <text x="640" y="120" fill="#898781" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">readings · features</text>
+        <text x="640" y="136" fill="#898781" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">· events</text>
+        <!-- arrow 3 -->
+        <line x1="732" y1="112" x2="774" y2="112" stroke="#898781" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- dashboard -->
+        <rect x="778" y="60" width="174" height="104" rx="12" fill="#1f1f1e" stroke="rgba(255,255,255,0.14)"/>
+        <text x="865" y="94" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle" font-family="system-ui,sans-serif">Streamlit dashboard</text>
+        <text x="865" y="114" fill="#898781" font-size="11.5" text-anchor="middle" font-family="system-ui,sans-serif">live charts · event log</text>
+        <rect x="812" y="126" width="106" height="24" rx="12" fill="rgba(208,59,59,0.18)"/>
+        <text x="865" y="142" fill="#e66767" font-size="11.5" font-weight="600" text-anchor="middle" font-family="system-ui,sans-serif">⚠ live alerts</text>
+      </svg>
+      <figcaption>The end-to-end pipeline: wearable IMU → BLE → validation, feature engineering
+      and detection in Python → relational storage → live monitoring dashboard.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">3</span>Work Process</h2>
+    <p><strong style="color:var(--ink)">Collect and validate.</strong> Every BLE packet is decoded
+    and checked before it is trusted: it must contain exactly six numeric values, and each reading
+    must sit inside the physical limits of the BMI270 sensor (±16 g acceleration, ±2000°/s
+    rotation). Malformed or out-of-range packets are counted and rejected rather than stored, so
+    corrupted data can never reach the detector.</p>
+    <p><strong style="color:var(--ink)">Store.</strong> Clean readings are timestamped and written
+    to a relational database — MariaDB in the main build, with SQLite as a drop-in fallback — in
+    batches of 100 (about once per second) to keep up with the 100 Hz stream. Three tables mirror
+    the pipeline: <code style="color:var(--accent)">imu_readings</code> for raw samples,
+    <code style="color:var(--accent)">imu_features</code> for processed values such as acceleration
+    magnitude, and <code style="color:var(--accent)">events</code> for detected incidents with
+    severity and peak value.</p>
+    <p><strong style="color:var(--ink)">Detect.</strong> Rather than checking axes separately, the
+    detector works on overall acceleration and rotation magnitudes. A genuine fall has a
+    three-phase signature: a free-fall dip (below 0.7 g), an impact spike (above 1.8 g) within
+    1.5 seconds, then unusual stillness — the person on the ground. A big rotational lurch that is
+    <em>not</em> followed by stillness is classified as a near miss: the scary stumble a worker
+    recovers from. Severity is graded from the peak impact force.</p>
+    <p><strong style="color:var(--ink)">Tune against ground truth.</strong> We staged safe test
+    events — controlled drops, stumbles and recoveries — and wrote down the exact time of each.
+    Replaying the stored data through the offline processor, we compared detections against our
+    notes and adjusted the thresholds between runs: the impact threshold came down from 2.5 g to
+    1.8 g so that real falls trigger reliably, the free-fall threshold relaxed to 0.7 g, and the
+    near-miss rotation threshold was raised to stop normal walking from raising false alarms.</p>
+    <div class="callout"><strong style="color:var(--ink)">Alternatives we weighed.</strong>
+    Wi-Fi/MQTT would give longer range than BLE but drains the wearable's battery and fails in
+    basements and enclosed spaces, so BLE to a local PC — which keeps working with zero internet —
+    fit the site constraints better. A machine-learning classifier could cut false alarms further,
+    but it needs large labelled fall datasets that are unsafe to collect; our threshold state
+    machine is explainable and safely tunable instead.</div>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">4</span>Outcome &amp; Results</h2>
+    <p>The finished prototype does the whole job: it collected live accelerometer and gyroscope
+    data over BLE, kept the database clean at 100 samples per second, and generated FALL, STF and
+    NEAR_MISS events from different movement patterns in our controlled tests — each with a
+    timestamp, severity grade and peak reading a supervisor can review afterwards.</p>
+
+    <figure>
+      <img src="../assets/img/dep_dashboard_top.png" alt="Safety dashboard showing an active FALL alert, session metrics and the acceleration trace with visible free-fall dips and impact spikes" loading="lazy">
+      <figcaption>The live dashboard during a replayed test session: an active HIGH-severity FALL
+      alert, session metrics, and the acceleration trace — the two free-fall dips followed by
+      impact spikes are clearly visible at samples ~480 and ~750.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/dep_dashboard_events.png" alt="Angular-rate chart with a near-miss rotation spike, and the detected events table listing FALL, STF and NEAR_MISS" loading="lazy">
+      <figcaption>Rotation trace and the event log: one NEAR_MISS (429°/s lurch, recovered), one
+      STF (3.18 g impact, MED) and one FALL (4.57 g impact, HIGH) — all three event types the
+      system was designed to catch.</figcaption>
+    </figure>
+
+    <p>We were equally deliberate about limitations: fixed thresholds may need adjustment for
+    different workers and movements, and controlled testing cannot cover everything that happens
+    on a real site, so measuring false-positive and false-negative rates in the field is the
+    obvious next step. The design scales cheaply — one low-cost wearable per worker, free
+    open-source software, and an events table already keyed by device name, so adding workers
+    needs no pipeline changes. Planned enhancements include on-device edge detection (alerts even
+    with zero connectivity) and push notifications to a supervisor's phone across a whole fleet.</p>
+  </section>
+
+  <div class="pager">
+    <a class="btn" href="../index.html#projects">← All projects</a>
+    <a class="btn" href="quant-backtester.html">Next: S&amp;P 500 Backtester →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
+    </div>
+    <div>© 2026 Ismat Allam · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic</div>
+  </div>
+</footer>
+
+</body>
+</html>
