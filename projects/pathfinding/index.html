@@ -9,10 +9,10 @@
     --page:#0d0d0d; --surface:#1a1a19; --card:#212120;
     --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
     --hairline:rgba(255,255,255,0.10); --grid:#2c2c2a;
-    --accent:#3987e5;
+    --accent:#14b87c;
     --cell:#1f1f1e; --wall:#5c5b54; --sand:#7a6433;
-    --frontier:#86b6ef; --visited:#1c5cab; --path:#eda100;
-    --start:#0ca30c; --end:#d03b3b;
+    --frontier:#7fdcb7; --visited:#17825e; --path:#eda100;
+    --start:#2a78d6; --end:#d03b3b;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
@@ -38,7 +38,7 @@
     border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer;
   }
   select:hover,button:hover{border-color:rgba(255,255,255,0.25); color:var(--ink);}
-  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600;}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#0d0d0d; font-weight:600;}
   button.primary:hover{filter:brightness(1.1);}
   button.tool.active{border-color:var(--accent); color:var(--ink); box-shadow:inset 0 0 0 1px var(--accent);}
   input[type=range]{accent-color:var(--accent); width:110px;}
@@ -161,8 +161,8 @@ board.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
 
 const cells = [];            // DOM nodes
 const type  = [];            // "open" | "wall" | "sand"
-let startId = idx(5, Math.floor(ROWS/2));
-let endId   = idx(COLS-6, Math.floor(ROWS/2));
+let startId = idx(4, 10);          // even coordinates: the maze's
+let endId   = idx(COLS-6, 10);     // corridor grid always reaches them
 let runToken = 0;            // bump to cancel a running animation
 
 function idx(c,r){ return r*COLS+c; }
@@ -363,6 +363,18 @@ function maze(){
     }
   }
   divide(0,0,COLS,ROWS);
+  // Walls live on odd grid lines, so every even-even cell stays connected.
+  // If start/target were dragged onto an odd line, carve a short link from
+  // them into that connected grid so a path always exists.
+  for(const node of [startId, endId]){
+    const c = node % COLS, r = (node / COLS) | 0;
+    const ce = c % 2 ? (c + 1 < COLS ? c + 1 : c - 1) : c;
+    const re = r % 2 ? (r + 1 < ROWS ? r + 1 : r - 1) : r;
+    for(const [cc, rr] of [[ce, r], [c, re], [ce, re]]){
+      const i = idx(cc, rr);
+      if(i !== startId && i !== endId) type[i] = "open";
+    }
+  }
   for(let i=0;i<type.length;i++) if(type[i]==="wall") cells[i].classList.add("wall");
   paintEndpoints();
 }
