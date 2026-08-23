@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convolution Kernel Lab — Ismat Allam</title>
+<style>
+  :root{
+    --page:#0d0d0d; --surface:#1a1a19; --card:#212120;
+    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --hairline:rgba(255,255,255,0.10); --accent:#3987e5;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--page); color:var(--ink2);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px;}
+  header{width:100%; max-width:1080px; margin-bottom:18px;}
+  header .crumb{font-size:13px; color:var(--muted); margin-bottom:6px;}
+  header .crumb a{color:var(--accent); text-decoration:none;}
+  h1{color:var(--ink); font-size:26px; letter-spacing:-0.02em;}
+  header p{margin-top:6px; font-size:14.5px; max-width:75ch;}
+  header b{color:var(--ink2);}
+
+  .toolbar{width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:10px;
+    align-items:center; background:var(--surface); border:1px solid var(--hairline);
+    border-radius:12px; padding:12px 14px; margin-bottom:14px;}
+  .toolbar label{font-size:13px; color:var(--muted);}
+  select,button{background:var(--card); color:var(--ink2); border:1px solid var(--hairline);
+    border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer;}
+  select:hover,button:hover{border-color:rgba(255,255,255,0.25); color:var(--ink);}
+  .spacer{flex:1;}
+  input[type=file]{display:none;}
+  .stat{font-size:13px; color:var(--muted);}
+  .stat b{color:var(--ink); font-weight:600;}
+
+  .grid{width:100%; max-width:1080px; display:grid;
+        grid-template-columns:220px 1fr 1fr; gap:14px; align-items:start;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr;} .kpanel{grid-column:1 / -1;}}
+  .panel{background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px;}
+  .panel h2{color:var(--ink); font-size:15px; font-weight:600; margin-bottom:10px;}
+  canvas{width:100%; height:auto; border-radius:8px; display:block; background:#111;}
+  .kgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
+  .kgrid input{width:100%; background:var(--card); border:1px solid var(--hairline);
+    color:var(--ink); border-radius:8px; padding:9px 4px; font-size:14px; text-align:center;
+    font-variant-numeric:tabular-nums;}
+  .kgrid input:focus{outline:none; border-color:var(--accent);}
+  .kmeta{margin-top:10px; font-size:12.5px; color:var(--muted); line-height:1.6;}
+  .kmeta b{color:var(--ink2);}
+
+  details{width:100%; max-width:1080px; margin-top:16px; background:var(--surface);
+    border:1px solid var(--hairline); border-radius:12px; padding:14px 18px;}
+  summary{cursor:pointer; color:var(--ink); font-weight:600; font-size:15px;}
+  details p{margin-top:10px; font-size:14px; line-height:1.55; max-width:90ch;}
+  details b{color:var(--ink2);}
+  footer{margin-top:26px; font-size:13px; color:var(--muted);}
+  footer a{color:var(--accent); text-decoration:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="crumb"><a href="../kernel-lab.html">← Back to project page</a></div>
+  <h1>Convolution Kernel Lab</h1>
+  <p>Every image filter — and the first layer of every convolutional neural network — is a tiny
+     grid of numbers slid across the picture. Pick a preset, or <b>edit the 3×3 kernel yourself</b>
+     and watch the image change instantly. Blur, sharpen and edge detection are all just
+     different numbers in the grid.</p>
+</header>
+
+<div class="toolbar">
+  <label>Image</label>
+  <select id="imgsel">
+    <option value="shapes" selected>Shapes</option>
+    <option value="city">Night city</option>
+  </select>
+  <button id="uploadBtn">⤒ Use your own image</button>
+  <input type="file" id="file" accept="image/*">
+  <label>Preset</label>
+  <select id="preset">
+    <option value="identity" selected>Identity (no change)</option>
+    <option value="boxblur">Box blur</option>
+    <option value="gauss">Gaussian blur</option>
+    <option value="sharpen">Sharpen</option>
+    <option value="edge">Edge detect (Laplacian)</option>
+    <option value="sobelx">Sobel — vertical edges</option>
+    <option value="sobely">Sobel — horizontal edges</option>
+    <option value="emboss">Emboss</option>
+    <option value="outline">Outline</option>
+  </select>
+  <span class="spacer"></span>
+  <span class="stat">Applied in <b id="ms">–</b></span>
+</div>
+
+<div class="grid">
+  <div class="panel kpanel">
+    <h2>The kernel</h2>
+    <div class="kgrid" id="kgrid"></div>
+    <div class="kmeta">
+      Sum <b id="ksum">1</b> · divisor <b id="kdiv">1</b> · offset <b id="koff">0</b><br>
+      Each output pixel = its 3×3 neighbourhood, multiplied cell-by-cell by this grid,
+      summed, divided by the divisor, plus the offset.
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Original</h2>
+    <canvas id="src"></canvas>
+  </div>
+  <div class="panel">
+    <h2>After convolution</h2>
+    <canvas id="dst"></canvas>
+  </div>
+</div>
+
+<details>
+  <summary>What does this have to do with AI?</summary>
+  <p>A <b>convolutional neural network</b> (the architecture behind modern image recognition) is
+  built from exactly this operation. The difference is that nobody chooses the numbers: the
+  network <b>learns</b> thousands of kernels from data, and the early ones typically converge to
+  edge and texture detectors remarkably similar to the Sobel and Laplacian presets here. Playing
+  with this lab is playing with what a CNN's first layer does — by hand. Notice also that blur
+  kernels sum to 1 (they average), while edge kernels sum to 0 (flat areas go black: no edge,
+  no signal).</p>
+</details>
+
+<footer>Built with vanilla JavaScript — no libraries. Part of <a href="../../index.html">Ismat Allam's portfolio</a>.</footer>
+
+<script>
+"use strict";
+const SAMPLES = {
+  shapes: "data:image/png;base64,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",
+  city: "data:image/png;base64,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",
+};
+const PRESETS = {
+  identity: {k: [0,0,0, 0,1,0, 0,0,0], div: 1, off: 0},
+  boxblur:  {k: [1,1,1, 1,1,1, 1,1,1], div: 9, off: 0},
+  gauss:    {k: [1,2,1, 2,4,2, 1,2,1], div: 16, off: 0},
+  sharpen:  {k: [0,-1,0, -1,5,-1, 0,-1,0], div: 1, off: 0},
+  edge:     {k: [0,-1,0, -1,4,-1, 0,-1,0], div: 1, off: 0},
+  sobelx:   {k: [-1,0,1, -2,0,2, -1,0,1], div: 1, off: 0},
+  sobely:   {k: [-1,-2,-1, 0,0,0, 1,2,1], div: 1, off: 0},
+  emboss:   {k: [-2,-1,0, -1,1,1, 0,1,2], div: 1, off: 60},
+  outline:  {k: [-1,-1,-1, -1,8,-1, -1,-1,-1], div: 1, off: 0},
+};
+
+const $ = id => document.getElementById(id);
+const srcC = $("src"), dstC = $("dst");
+const sctx = srcC.getContext("2d", {willReadFrequently: true});
+const dctx = dstC.getContext("2d");
+let kernel = [...PRESETS.identity.k], divisor = 1, offset = 0;
+
+/* ---- kernel grid UI ---- */
+const inputs = [];
+for (let i = 0; i < 9; i++){
+  const inp = document.createElement("input");
+  inp.type = "text"; inp.inputMode = "decimal"; inp.value = kernel[i];
+  inp.oninput = () => {
+    kernel = inputs.map(x => parseFloat(x.value) || 0);
+    const s = kernel.reduce((a, b) => a + b, 0);
+    divisor = Math.abs(s) > 1e-9 ? s : 1;   // auto-normalise so custom blurs don't blow out
+    offset = 0;
+    $("preset").value = "identity";  // custom edit
+    updateMeta(); apply();
+  };
+  inputs.push(inp); $("kgrid").appendChild(inp);
+}
+function setKernel(p){
+  kernel = [...p.k]; divisor = p.div; offset = p.off;
+  inputs.forEach((inp, i) => inp.value = p.k[i]);
+  updateMeta(); apply();
+}
+function updateMeta(){
+  $("ksum").textContent = (Math.round(kernel.reduce((a,b)=>a+b,0)*100)/100);
+  $("kdiv").textContent = (Math.round(divisor*100)/100);
+  $("koff").textContent = offset;
+}
+$("preset").onchange = e => setKernel(PRESETS[e.target.value]);
+
+/* ---- image loading ---- */
+function loadImage(url){
+  const im = new Image();
+  im.onload = () => {
+    const maxW = 480;
+    const sc = Math.min(1, maxW / im.width);
+    const w = Math.round(im.width * sc), h = Math.round(im.height * sc);
+    srcC.width = dstC.width = w; srcC.height = dstC.height = h;
+    sctx.drawImage(im, 0, 0, w, h);
+    apply();
+  };
+  im.src = url;
+}
+$("imgsel").onchange = e => loadImage(SAMPLES[e.target.value]);
+$("uploadBtn").onclick = () => $("file").click();
+$("file").onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = ev => loadImage(ev.target.result);   // stays in your browser — nothing is uploaded
+  rd.readAsDataURL(f);
+};
+
+/* ---- the convolution itself ---- */
+function apply(){
+  const w = srcC.width, h = srcC.height;
+  if (!w) return;
+  const t0 = performance.now();
+  const src = sctx.getImageData(0, 0, w, h);
+  const out = dctx.createImageData(w, h);
+  const s = src.data, o = out.data, K = kernel, dv = divisor, of = offset;
+  for (let y = 0; y < h; y++){
+    const ym = y > 0 ? y - 1 : 0, yp = y < h - 1 ? y + 1 : h - 1;
+    for (let x = 0; x < w; x++){
+      const xm = x > 0 ? x - 1 : 0, xp = x < w - 1 ? x + 1 : w - 1;
+      // offsets of the 9 neighbours (edge pixels clamp)
+      const i0=(ym*w+xm)*4, i1=(ym*w+x)*4, i2=(ym*w+xp)*4,
+            i3=(y*w+xm)*4,  i4=(y*w+x)*4, i5=(y*w+xp)*4,
+            i6=(yp*w+xm)*4, i7=(yp*w+x)*4, i8=(yp*w+xp)*4;
+      for (let c = 0; c < 3; c++){
+        const v = (s[i0+c]*K[0] + s[i1+c]*K[1] + s[i2+c]*K[2] +
+                   s[i3+c]*K[3] + s[i4+c]*K[4] + s[i5+c]*K[5] +
+                   s[i6+c]*K[6] + s[i7+c]*K[7] + s[i8+c]*K[8]) / dv + of;
+        o[i4+c] = v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+      o[i4+3] = 255;
+    }
+  }
+  dctx.putImageData(out, 0, 0);
+  $("ms").textContent = (performance.now() - t0).toFixed(1) + " ms";
+}
+
+updateMeta();
+loadImage(SAMPLES.shapes);
+</script>
+</body>
+</html>
