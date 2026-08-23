@@ -83,12 +83,12 @@ const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
           const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y;
           const d = Math.hypot(dx, dy);
           if (d < LINK) {
-            ctx.strokeStyle = `rgba(57,135,229,${0.16 * (1 - d / LINK)})`;
+            ctx.strokeStyle = `rgba(20,184,124,${0.16 * (1 - d / LINK)})`;
             ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke();
           }
         }
       }
-      ctx.fillStyle = "rgba(57,135,229,0.55)";
+      ctx.fillStyle = "rgba(20,184,124,0.55)";
       for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, 7); ctx.fill(); }
     })();
   }
@@ -151,7 +151,7 @@ let last = 0;
         const x = (i % CW) * cell, y = ((i / CW) | 0) * cell;
         if (walls[i]) { ctx.fillStyle = "#3d3c37"; ctx.fillRect(x, y, cell - 1, cell - 1); }
       }
-      ctx.fillStyle = "rgba(57,135,229,0.55)";
+      ctx.fillStyle = "rgba(25,158,112,0.62)";
       for (let j = 0; j < visN; j++) {
         const i = order[j], x = (i % CW) * cell, y = ((i / CW) | 0) * cell;
         ctx.fillRect(x, y, cell - 1, cell - 1);
@@ -165,7 +165,7 @@ let last = 0;
         ctx.fillStyle = col;
         ctx.fillRect((i % CW) * cell, ((i / CW) | 0) * cell, cell - 1, cell - 1);
       };
-      dot(ends.s, "#0ca30c"); dot(ends.e, "#d03b3b");
+      dot(ends.s, "#2a78d6"); dot(ends.e, "#d03b3b");
     }
     registerMini(cv, () => {
       if (phase === 0) { k += 7; if (k >= order.length) { k = order.length; phase = 1; } draw(k, 0); }
@@ -215,14 +215,14 @@ let last = 0;
         for (let gx = 0; gx < GX; gx++) {
           const p = predict({x: (gx + 0.5) / GX * 2.2 - 1.1, y: (gy + 0.5) / GY * 2.2 - 1.1});
           const t = Math.abs(p - 0.5) * 2, dark = [26, 26, 25],
-                col = p < 0.5 ? [57, 135, 229] : [217, 89, 38], k = 0.12 + 0.5 * t;
+                col = p < 0.5 ? [25, 158, 112] : [217, 89, 38], k = 0.12 + 0.5 * t;
           ctx.fillStyle = `rgb(${dark.map((d, i) => Math.round(d + (col[i] - d) * k)).join(",")})`;
           ctx.fillRect(gx * cw, gy * ch, cw + 1, ch + 1);
         }
       for (const p of data) {
         ctx.beginPath();
         ctx.arc((p.x + 1.1) / 2.2 * cv.width, (p.y + 1.1) / 2.2 * cv.height, 2.6, 0, 7);
-        ctx.fillStyle = p.l ? "#d95926" : "#3987e5"; ctx.fill();
+        ctx.fillStyle = p.l ? "#d95926" : "#199e70"; ctx.fill();
       }
     }
     reset();
