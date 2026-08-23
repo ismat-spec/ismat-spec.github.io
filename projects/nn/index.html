@@ -9,7 +9,7 @@
     --page:#0d0d0d; --surface:#1a1a19; --card:#212120;
     --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
     --hairline:rgba(255,255,255,0.10);
-    --accent:#3987e5; --c0:#3987e5; --c1:#d95926;
+    --accent:#14b87c; --c0:#199e70; --c1:#d95926;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
@@ -36,7 +36,7 @@
     border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer;
   }
   select:hover,button:hover{border-color:rgba(255,255,255,0.25); color:var(--ink);}
-  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; min-width:104px;}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#0d0d0d; font-weight:600; min-width:104px;}
   button.primary:hover{filter:brightness(1.1);}
   .spacer{flex:1;}
 
@@ -309,7 +309,7 @@ const toPx = v => HALF + v * SCALE;
 // color helpers: blend class colors over the dark surface by confidence
 function mix(p){ // p = P(class B)
   // interpolate blue (class A, p=0) -> dark neutral -> orange (class B, p=1)
-  const a = [57,135,229], m = [26,26,25], b = [217,89,38];
+  const a = [25,158,112], m = [26,26,25], b = [217,89,38];
   const t = Math.abs(p - 0.5) * 2, from = m, to = p < 0.5 ? a : b;
   const w = 0.12 + 0.55 * t;   // keep background subdued
   return `rgb(${from.map((f,i)=>Math.round(f+(to[i]-f)*w)).join(",")})`;
@@ -327,7 +327,7 @@ function drawBoundary(){
   for (const p of data){
     bnd.beginPath();
     bnd.arc(toPx(p.x), toPx(p.y), 3.4, 0, 7);
-    bnd.fillStyle = p.label ? "#d95926" : "#3987e5";
+    bnd.fillStyle = p.label ? "#d95926" : "#199e70";
     bnd.fill();
     bnd.lineWidth = 1; bnd.strokeStyle = "rgba(13,13,13,0.9)"; bnd.stroke();
   }
@@ -344,7 +344,7 @@ function drawNetwork(){
     for (let i = 0; i < net.W[l].length; i++)
       for (let j = 0; j < net.W[l][i].length; j++){
         const w = net.W[l][i][j];
-        netc.strokeStyle = w > 0 ? "rgba(57,135,229,0.75)" : "rgba(217,89,38,0.75)";
+        netc.strokeStyle = w > 0 ? "rgba(25,158,112,0.8)" : "rgba(217,89,38,0.75)";
         netc.lineWidth = Math.min(4, Math.abs(w) * 1.6) + 0.2;
         netc.beginPath();
         netc.moveTo(xs[l], ys[l][j]);
@@ -372,7 +372,7 @@ function drawLoss(){
   if (!lossHist.length){ lc.fillText("press Train", 40, 40); return; }
   const max = Math.max(...lossHist, 0.75);
   lc.fillText(max.toFixed(2), 4, 14); lc.fillText("0", 18, H - 26);
-  lc.strokeStyle = "#3987e5"; lc.lineWidth = 2; lc.beginPath();
+  lc.strokeStyle = "#199e70"; lc.lineWidth = 2; lc.beginPath();
   lossHist.forEach((v, i) => {
     const x = 30 + i / Math.max(lossHist.length - 1, 1) * (W - 40);
     const y = (H - 26) - v / max * (H - 40);
