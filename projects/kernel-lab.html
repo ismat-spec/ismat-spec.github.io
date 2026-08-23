@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convolution Kernel Lab — Ismat Allam</title>
+<meta name="description" content="Case study: an interactive convolution playground — edit a 3×3 kernel and watch blur, sharpen and edge detection happen live; the intuition behind a CNN's first layer.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="../index.html">Ismat Allam<span>.</span></a>
+    <div class="nav-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="social" href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a class="social" href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</nav>
+
+<header class="case-hero">
+  <div class="wrap">
+    <span class="tag">Personal project · Computer vision</span>
+    <h1>Convolution Kernel Lab</h1>
+    <p class="lead">Blur, sharpen, emboss and edge detection are not separate algorithms — they
+    are the same operation with different numbers. This lab lets you edit the numbers. It is the
+    intuition behind a convolutional neural network's first layer, made touchable.</p>
+    <div class="meta">
+      <div><b>Type</b><span>Personal project, solo</span></div>
+      <div><b>Stack</b><span>JavaScript · Canvas — zero dependencies</span></div>
+      <div><b>Try it</b><span>Filters run live on your own images too</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:26px;">
+      <a class="btn primary" href="kernels/index.html">▶ Launch the lab</a>
+      <a class="btn" href="https://github.com/ismat-spec/convolution-kernel-lab" target="_blank" rel="noopener">View source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="case-body wrap">
+
+  <section class="case-section">
+    <h2><span class="num">1</span>Project Scope &amp; Problem</h2>
+    <p>Convolutional neural networks are the standard tool for image recognition, and
+    "convolution" is the step everyone learns first — a little grid of numbers slid across a
+    picture. Yet it usually stays an equation on a slide. When I studied CNNs I realised I could
+    not answer basic questions concretely: why does one kernel blur while another finds edges?
+    Why do blur kernels sum to 1 and edge kernels to 0? What happens if I change one number?</p>
+    <p>The scope: build a tool where those questions answer themselves — a live convolution
+    engine where every cell of the kernel is editable, presets show the classic filters, the
+    result appears instantly, and it works on any image the visitor supplies (processed entirely
+    in their browser, nothing uploaded anywhere).</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">2</span>My Role &amp; Solution</h2>
+    <p>Solo build, no libraries. The screen shows the 3×3 kernel as nine editable cells beside
+    the original and filtered images. Nine presets cover the classics — box and Gaussian blur,
+    sharpen, Laplacian edge detection, both Sobel operators, emboss and outline — and the moment
+    you type your own number into any cell, the filter reapplies and the kernel metadata (sum,
+    divisor, offset) updates, so the arithmetic is always in view.</p>
+    <p>The convolution itself is a hand-written loop over the canvas's raw pixel buffer:
+    for every pixel, multiply its 3×3 neighbourhood cell-by-cell with the kernel, sum, divide,
+    offset, clamp. Edge pixels clamp their neighbourhood, custom kernels auto-normalise by their
+    sum so home-made blurs don't blow out the brightness, and a timer shows the real cost —
+    a full pass over a 480-pixel-wide image runs in a few milliseconds.</p>
+    <figure>
+      <img src="../assets/img/kernel_lab.png" alt="The kernel lab applying an outline kernel: the geometric sample image becomes glowing edges on black, with the 3×3 kernel grid showing -1s around an 8" loading="lazy">
+      <figcaption>The outline kernel (−1s around an 8, summing to 0) applied to the built-in
+      sample: flat areas cancel to black and only edges survive — which is exactly what a CNN's
+      early layers learn to detect on their own.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">3</span>Work Process</h2>
+    <p>The core loop came first, and slowly: my first version read pixels with a tidy helper
+    function and took over 100 ms per frame — far too slow for live editing. Flattening it into
+    a single pass over the raw <code style="color:var(--accent)">ImageData</code> array with
+    precomputed neighbour offsets brought it down to a few milliseconds, a 20× speed-up that was
+    my first real lesson in why data layout matters for performance.</p>
+    <p>The rest of the process was making the mathematics legible: showing sum, divisor and
+    offset under the kernel so the normalisation is never hidden; auto-normalising custom
+    kernels by their sum; giving emboss its brightness offset so negative values don't just
+    clip to black; and choosing built-in sample images with strong geometry so Sobel's
+    directionality is obvious. The upload path uses the FileReader API and never leaves the
+    browser — a deliberate privacy decision that also kept the tool a static page, hostable on
+    GitHub Pages with no backend at all.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">4</span>Outcome &amp; Results</h2>
+    <p>The lab does what I built it to do: convolution stopped being a formula I had memorised
+    and became an operation I can predict. Ask me why edge kernels sum to zero and I can show
+    you a flat region cancelling itself out, live. The tool runs a full convolution pass in
+    roughly 5 ms, works on visitors' own photos entirely client-side, and needs nothing
+    installed — which also makes it the fastest possible answer to "do you actually understand
+    what a CNN does?" in an interview: <a href="kernels/index.html">open it and edit the
+    numbers</a>.</p>
+  </section>
+
+  <div class="pager">
+    <a class="btn" href="nn-playground.html">← Prev: Neural Network Playground</a>
+    <a class="btn" href="../index.html#projects">All projects →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
+    </div>
+    <div>© 2026 Mohammad Ismat Allam Bin Abdul Rahman · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic</div>
+  </div>
+</footer>
+
+</body>
+</html>
