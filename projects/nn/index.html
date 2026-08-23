@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network Playground — Ismat Allam</title>
+<style>
+  :root{
+    --page:#0d0d0d; --surface:#1a1a19; --card:#212120;
+    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --hairline:rgba(255,255,255,0.10);
+    --accent:#3987e5; --c0:#3987e5; --c1:#d95926;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--page); color:var(--ink2);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px;
+  }
+  header{width:100%; max-width:1080px; margin-bottom:18px;}
+  header .crumb{font-size:13px; color:var(--muted); margin-bottom:6px;}
+  header .crumb a{color:var(--accent); text-decoration:none;}
+  h1{color:var(--ink); font-size:26px; letter-spacing:-0.02em;}
+  header p{margin-top:6px; font-size:14.5px; max-width:75ch;}
+  header b{color:var(--ink2);}
+
+  .toolbar{
+    width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:10px;
+    align-items:center; background:var(--surface); border:1px solid var(--hairline);
+    border-radius:12px; padding:12px 14px; margin-bottom:12px;
+  }
+  .toolbar label{font-size:13px; color:var(--muted);}
+  select,button{
+    background:var(--card); color:var(--ink2); border:1px solid var(--hairline);
+    border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer;
+  }
+  select:hover,button:hover{border-color:rgba(255,255,255,0.25); color:var(--ink);}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; min-width:104px;}
+  button.primary:hover{filter:brightness(1.1);}
+  .spacer{flex:1;}
+
+  .stats{width:100%; max-width:1080px; display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;}
+  .stat{background:var(--surface); border:1px solid var(--hairline); border-radius:10px;
+        padding:8px 14px; font-size:13px; color:var(--muted);}
+  .stat b{color:var(--ink); font-size:16px; margin-left:6px; font-weight:600;
+          font-variant-numeric:tabular-nums;}
+
+  .panels{width:100%; max-width:1080px; display:grid;
+          grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:14px;}
+  @media(max-width:860px){.panels{grid-template-columns:1fr;}}
+  .panel{background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+         padding:14px; display:flex; flex-direction:column; gap:10px;}
+  .panel h2{color:var(--ink); font-size:15px; font-weight:600;}
+  canvas{width:100%; height:auto; border-radius:8px; background:var(--page); display:block;}
+  .legend{display:flex; gap:14px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .chipc{width:12px; height:12px; border-radius:50%; display:inline-block;}
+
+  details{width:100%; max-width:1080px; margin-top:16px; background:var(--surface);
+          border:1px solid var(--hairline); border-radius:12px; padding:14px 18px;}
+  summary{cursor:pointer; color:var(--ink); font-weight:600; font-size:15px;}
+  details p{margin-top:10px; font-size:14px; line-height:1.55; max-width:90ch;}
+  details b{color:var(--ink2);}
+  footer{margin-top:26px; font-size:13px; color:var(--muted);}
+  footer a{color:var(--accent); text-decoration:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="crumb"><a href="../nn-playground.html">← Back to project page</a></div>
+  <h1>Neural Network Playground</h1>
+  <p>A small neural network, trained <b>live in your browser</b> — no libraries, backpropagation
+     written from scratch. Pick a dataset, choose an architecture, press <b>Train</b>, and watch
+     the decision boundary learn the shape of the data. Line thickness in the network diagram
+     shows each connection's weight. Stuck on the spirals? Switch on the engineered
+     <b>features</b> — that switch is the whole lesson.</p>
+</header>
+
+<div class="toolbar">
+  <label>Dataset</label>
+  <select id="dataset">
+    <option value="spiral">Two spirals (hard)</option>
+    <option value="circles" selected>Circles</option>
+    <option value="xor">XOR quadrants</option>
+    <option value="blobs">Blobs (easy)</option>
+  </select>
+  <label>Hidden layers</label>
+  <select id="arch">
+    <option value="6">1 layer × 6</option>
+    <option value="6,6" selected>2 layers × 6</option>
+    <option value="8,8">2 layers × 8</option>
+    <option value="8,8,8">3 layers × 8</option>
+  </select>
+  <label>Activation</label>
+  <select id="act">
+    <option value="tanh" selected>tanh</option>
+    <option value="relu">ReLU</option>
+  </select>
+  <label>Features</label>
+  <select id="feats">
+    <option value="raw" selected>x, y (raw)</option>
+    <option value="eng">+ x², y², xy, sin</option>
+  </select>
+  <label>Learn rate</label>
+  <select id="lr">
+    <option value="0.01">0.01</option>
+    <option value="0.03" selected>0.03</option>
+    <option value="0.1">0.1</option>
+  </select>
+  <span class="spacer"></span>
+  <button id="reset">↺ New network</button>
+  <button class="primary" id="train">▶ Train</button>
+</div>
+
+<div class="stats">
+  <div class="stat">Epoch<b id="sEpoch">0</b></div>
+  <div class="stat">Loss<b id="sLoss">–</b></div>
+  <div class="stat">Accuracy<b id="sAcc">–</b></div>
+</div>
+
+<div class="panels">
+  <div class="panel">
+    <h2>Decision boundary</h2>
+    <canvas id="boundary" width="560" height="560"></canvas>
+    <div class="legend">
+      <span><span class="chipc" style="background:var(--c0)"></span>Class A</span>
+      <span><span class="chipc" style="background:var(--c1)"></span>Class B</span>
+      <span>Background shade = the network's current prediction</span>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Network — line width = |weight|</h2>
+    <canvas id="network" width="460" height="300"></canvas>
+    <h2 style="margin-top:4px;">Training loss</h2>
+    <canvas id="lossChart" width="460" height="180"></canvas>
+  </div>
+</div>
+
+<details>
+  <summary>What am I looking at?</summary>
+  <p>The network takes a point's (x, y) position and predicts which class it belongs to. Training
+  runs <b>gradient descent</b>: for every batch of points the code computes the prediction error,
+  then <b>backpropagates</b> it — applying the chain rule layer by layer to find how much each
+  weight contributed — and nudges every weight downhill. The background heatmap re-renders as the
+  weights change, so you literally watch the model's "opinion" of the plane take shape.
+  The two-spirals set is the classic stress test: with raw (x, y) inputs even a deep network
+  crawls, because the boundary it must draw is extremely tangled. Flip <b>Features</b> to the
+  engineered set — the same network now also sees x², y², xy and two sine waves of the inputs,
+  and the spiral falls in seconds. That is the oldest lesson in machine learning: a better
+  <b>representation</b> of the data beats a bigger model.</p>
+</details>
+
+<footer>Built with vanilla JavaScript — no libraries. Part of <a href="../../index.html">Ismat Allam's portfolio</a>.</footer>
+
+<script>
+"use strict";
+/* ================= data generation ================= */
+const N_PER_CLASS = 120;
+let rngSeed = 7;
+function rand(){ rngSeed = (rngSeed * 1103515245 + 12345) % 2147483648; return rngSeed / 2147483648; }
+function gauss(s){ return (rand()+rand()+rand()-1.5)/1.5 * s; }
+
+function makeData(kind){
+  const pts = [];
+  const add = (x,y,label) => pts.push({x, y, label});
+  if (kind === "spiral"){
+    for (let c = 0; c < 2; c++)
+      for (let i = 0; i < N_PER_CLASS; i++){
+        const r = i / N_PER_CLASS * 0.85 + 0.05;
+        const t = 1.4 * i / N_PER_CLASS * 2 * Math.PI + c * Math.PI;
+        add(r * Math.sin(t) + gauss(0.045), r * Math.cos(t) + gauss(0.045), c);
+      }
+  } else if (kind === "circles"){
+    for (let i = 0; i < N_PER_CLASS; i++){
+      const t = rand() * 2 * Math.PI, r = rand() * 0.38;
+      add(r * Math.cos(t) + gauss(0.03), r * Math.sin(t) + gauss(0.03), 0);
+    }
+    for (let i = 0; i < N_PER_CLASS; i++){
+      const t = rand() * 2 * Math.PI, r = 0.62 + rand() * 0.3;
+      add(r * Math.cos(t) + gauss(0.03), r * Math.sin(t) + gauss(0.03), 1);
+    }
+  } else if (kind === "xor"){
+    for (let i = 0; i < 2 * N_PER_CLASS; i++){
+      const x = rand() * 1.8 - 0.9, y = rand() * 1.8 - 0.9;
+      add(x + gauss(0.02), y + gauss(0.02), (x > 0) === (y > 0) ? 0 : 1);
+    }
+  } else { // blobs
+    for (let i = 0; i < N_PER_CLASS; i++) add(-0.45 + gauss(0.16), -0.4 + gauss(0.16), 0);
+    for (let i = 0; i < N_PER_CLASS; i++) add(0.45 + gauss(0.16), 0.45 + gauss(0.16), 1);
+  }
+  return pts;
+}
+
+/* ================= the network ================= */
+class MLP {
+  constructor(sizes, act){           // sizes e.g. [2,6,6,1]
+    this.sizes = sizes; this.actName = act;
+    this.W = []; this.b = []; this.vW = []; this.vb = [];
+    for (let l = 0; l < sizes.length - 1; l++){
+      const w = [];
+      // gauss(3) has std ~1, so this lands near Xavier-scale init
+      const scale = Math.sqrt(1 / sizes[l]);
+      for (let i = 0; i < sizes[l+1]; i++){
+        const row = [];
+        for (let j = 0; j < sizes[l]; j++) row.push(gauss(3) * scale);
+        w.push(row);
+      }
+      this.W.push(w);
+      this.b.push(new Array(sizes[l+1]).fill(0));
+      this.vW.push(w.map(r => r.map(() => 0)));
+      this.vb.push(new Array(sizes[l+1]).fill(0));
+    }
+  }
+  act(v){ return this.actName === "relu" ? Math.max(0, v) : Math.tanh(v); }
+  actGrad(a){ return this.actName === "relu" ? (a > 0 ? 1 : 0) : 1 - a * a; }
+
+  // forward pass, storing activations for backprop
+  forward(vec){
+    const acts = [vec];
+    for (let l = 0; l < this.W.length; l++){
+      const prev = acts[l], out = [];
+      const last = l === this.W.length - 1;
+      for (let i = 0; i < this.W[l].length; i++){
+        let z = this.b[l][i];
+        for (let j = 0; j < prev.length; j++) z += this.W[l][i][j] * prev[j];
+        out.push(last ? 1 / (1 + Math.exp(-z)) : this.act(z));   // sigmoid output
+      }
+      acts.push(out);
+    }
+    return acts;
+  }
+  predict(vec){ return this.forward(vec)[this.sizes.length - 1][0]; }
+
+  // one epoch of minibatch SGD over the whole dataset; returns mean loss
+  epoch(data, lr){
+    let loss = 0;
+    for (let start = 0; start < data.length; start += 20){
+      const batch = data.slice(start, start + 20);
+      // accumulate gradients
+      const gW = this.W.map(w => w.map(r => r.map(() => 0)));
+      const gb = this.b.map(bl => bl.map(() => 0));
+      for (const p of batch){
+        const acts = this.forward(feat.fn(p));
+        const out = acts[acts.length - 1][0];
+        loss += -(p.label * Math.log(out + 1e-9) + (1 - p.label) * Math.log(1 - out + 1e-9));
+        // delta at output (sigmoid + BCE simplifies to out - y)
+        let delta = [out - p.label];
+        for (let l = this.W.length - 1; l >= 0; l--){
+          const prev = acts[l], next = [];
+          for (let i = 0; i < this.W[l].length; i++){
+            gb[l][i] += delta[i];
+            for (let j = 0; j < prev.length; j++) gW[l][i][j] += delta[i] * prev[j];
+          }
+          if (l > 0){
+            for (let j = 0; j < prev.length; j++){
+              let s = 0;
+              for (let i = 0; i < this.W[l].length; i++) s += this.W[l][i][j] * delta[i];
+              next.push(s * this.actGrad(prev[j]));
+            }
+            delta = next;
+          }
+        }
+      }
+      // SGD with momentum 0.9 — plain SGD stalls on the spiral dataset
+      const k = lr / batch.length, MU = 0.9;
+      for (let l = 0; l < this.W.length; l++){
+        for (let i = 0; i < this.W[l].length; i++){
+          this.vb[l][i] = MU * this.vb[l][i] - k * gb[l][i];
+          this.b[l][i] += this.vb[l][i];
+          for (let j = 0; j < this.W[l][i].length; j++){
+            this.vW[l][i][j] = MU * this.vW[l][i][j] - k * gW[l][i][j];
+            this.W[l][i][j] += this.vW[l][i][j];
+          }
+        }
+      }
+    }
+    return loss / data.length;
+  }
+}
+
+/* ================= app state ================= */
+const $ = id => document.getElementById(id);
+const FEATURES = {
+  raw: {names: ["x", "y"], fn: p => [p.x, p.y]},
+  eng: {names: ["x", "y", "x\u00b2", "y\u00b2", "xy", "sin4x", "sin4y"],
+        fn: p => [p.x, p.y, p.x*p.x, p.y*p.y, p.x*p.y, Math.sin(4*p.x), Math.sin(4*p.y)]},
+};
+let data, net, feat, running = false, epochN = 0, lossHist = [];
+
+function build(){
+  running = false; $("train").textContent = "▶ Train";
+  epochN = 0; lossHist = [];
+  data = makeData($("dataset").value);
+  feat = FEATURES[$("feats").value];
+  const hidden = $("arch").value.split(",").map(Number);
+  net = new MLP([feat.names.length, ...hidden, 1], $("act").value);
+  $("sEpoch").textContent = "0"; $("sLoss").textContent = "–"; $("sAcc").textContent = "–";
+  drawAll();
+}
+
+/* ================= drawing ================= */
+const bnd = $("boundary").getContext("2d");
+const netc = $("network").getContext("2d");
+const lc = $("lossChart").getContext("2d");
+const S = 560, HALF = S / 2, SCALE = S / 2.2;   // world [-1.1,1.1] -> canvas
+const toPx = v => HALF + v * SCALE;
+
+// color helpers: blend class colors over the dark surface by confidence
+function mix(p){ // p = P(class B)
+  // interpolate blue (class A, p=0) -> dark neutral -> orange (class B, p=1)
+  const a = [57,135,229], m = [26,26,25], b = [217,89,38];
+  const t = Math.abs(p - 0.5) * 2, from = m, to = p < 0.5 ? a : b;
+  const w = 0.12 + 0.55 * t;   // keep background subdued
+  return `rgb(${from.map((f,i)=>Math.round(f+(to[i]-f)*w)).join(",")})`;
+}
+
+const GRID = 70;
+function drawBoundary(){
+  const cell = S / GRID;
+  for (let gy = 0; gy < GRID; gy++)
+    for (let gx = 0; gx < GRID; gx++){
+      const x = (gx + 0.5) / GRID * 2.2 - 1.1, y = (gy + 0.5) / GRID * 2.2 - 1.1;
+      bnd.fillStyle = mix(net.predict(feat.fn({x, y})));
+      bnd.fillRect(gx * cell, gy * cell, cell + 1, cell + 1);
+    }
+  for (const p of data){
+    bnd.beginPath();
+    bnd.arc(toPx(p.x), toPx(p.y), 3.4, 0, 7);
+    bnd.fillStyle = p.label ? "#d95926" : "#3987e5";
+    bnd.fill();
+    bnd.lineWidth = 1; bnd.strokeStyle = "rgba(13,13,13,0.9)"; bnd.stroke();
+  }
+}
+
+function drawNetwork(){
+  const W = 460, H = 300;
+  netc.clearRect(0, 0, W, H);
+  const layers = net.sizes;
+  const xs = layers.map((_, l) => 34 + l * (W - 68) / (layers.length - 1));
+  const ys = layers.map(n => Array.from({length: n}, (_, i) => H / 2 + (i - (n - 1) / 2) * Math.min(40, (H - 40) / Math.max(n - 1, 1))));
+  // connections
+  for (let l = 0; l < net.W.length; l++)
+    for (let i = 0; i < net.W[l].length; i++)
+      for (let j = 0; j < net.W[l][i].length; j++){
+        const w = net.W[l][i][j];
+        netc.strokeStyle = w > 0 ? "rgba(57,135,229,0.75)" : "rgba(217,89,38,0.75)";
+        netc.lineWidth = Math.min(4, Math.abs(w) * 1.6) + 0.2;
+        netc.beginPath();
+        netc.moveTo(xs[l], ys[l][j]);
+        netc.lineTo(xs[l+1], ys[l+1][i]);
+        netc.stroke();
+      }
+  // nodes
+  for (let l = 0; l < layers.length; l++)
+    for (let i = 0; i < layers[l]; i++){
+      netc.beginPath(); netc.arc(xs[l], ys[l][i], 7, 0, 7);
+      netc.fillStyle = "#212120"; netc.fill();
+      netc.lineWidth = 1.4; netc.strokeStyle = "#898781"; netc.stroke();
+    }
+  netc.fillStyle = "#898781"; netc.font = "11px system-ui";
+  netc.fillText(feat.names.join(", "), 16, H - 8);
+  netc.fillText("P(class B)", W - 84, H - 8);
+}
+
+function drawLoss(){
+  const W = 460, H = 180;
+  lc.clearRect(0, 0, W, H);
+  lc.strokeStyle = "#2c2c2a";
+  lc.beginPath(); lc.moveTo(30, H - 22); lc.lineTo(W - 6, H - 22); lc.stroke();
+  lc.fillStyle = "#898781"; lc.font = "11px system-ui";
+  if (!lossHist.length){ lc.fillText("press Train", 40, 40); return; }
+  const max = Math.max(...lossHist, 0.75);
+  lc.fillText(max.toFixed(2), 4, 14); lc.fillText("0", 18, H - 26);
+  lc.strokeStyle = "#3987e5"; lc.lineWidth = 2; lc.beginPath();
+  lossHist.forEach((v, i) => {
+    const x = 30 + i / Math.max(lossHist.length - 1, 1) * (W - 40);
+    const y = (H - 26) - v / max * (H - 40);
+    i ? lc.lineTo(x, y) : lc.moveTo(x, y);
+  });
+  lc.stroke();
+  lc.fillStyle = "#c3c2b7";
+  lc.fillText("loss: " + lossHist[lossHist.length - 1].toFixed(3), W - 92, 14);
+}
+
+function drawAll(){ drawBoundary(); drawNetwork(); drawLoss(); }
+
+/* ================= training loop ================= */
+function accuracy(){
+  let ok = 0;
+  for (const p of data) ok += (net.predict(feat.fn(p)) > 0.5 ? 1 : 0) === p.label ? 1 : 0;
+  return ok / data.length;
+}
+function tick(){
+  if (!running) return;
+  const lr = parseFloat($("lr").value);
+  let loss = 0;
+  for (let k = 0; k < 4; k++){ loss = net.epoch(data, lr); epochN++; }
+  lossHist.push(loss); if (lossHist.length > 240) lossHist.shift();
+  $("sEpoch").textContent = epochN;
+  $("sLoss").textContent = loss.toFixed(3);
+  $("sAcc").textContent = (accuracy() * 100).toFixed(1) + "%";
+  drawAll();
+  requestAnimationFrame(tick);
+}
+
+$("train").onclick = () => {
+  running = !running;
+  $("train").textContent = running ? "❚❚ Pause" : "▶ Train";
+  if (running) requestAnimationFrame(tick);
+};
+$("reset").onclick = build;
+["dataset", "arch", "act", "feats"].forEach(id => $(id).onchange = build);
+
+build();
+</script>
+</body>
+</html>
