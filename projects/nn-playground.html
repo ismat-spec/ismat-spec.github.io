@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network Playground — Ismat Allam</title>
+<meta name="description" content="Case study: a neural network trained live in the browser — backpropagation from scratch in vanilla JavaScript, with live decision boundaries and a feature-engineering lesson.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="../index.html">Ismat Allam<span>.</span></a>
+    <div class="nav-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#contact">Contact</a>
+      <a class="social" href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a class="social" href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</nav>
+
+<header class="case-hero">
+  <div class="wrap">
+    <span class="tag">Personal project · Machine learning</span>
+    <h1>Neural Network Playground</h1>
+    <p class="lead">A neural network you can watch learn. The forward pass, backpropagation and
+    gradient descent are all written from scratch in vanilla JavaScript — no TensorFlow, no
+    libraries — and the decision boundary repaints live as the weights change.</p>
+    <div class="meta">
+      <div><b>Type</b><span>Personal project, solo</span></div>
+      <div><b>Stack</b><span>JavaScript · Canvas — zero dependencies</span></div>
+      <div><b>Try it</b><span>Trains right here in your browser</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:26px;">
+      <a class="btn primary" href="nn/index.html">▶ Launch the playground</a>
+      <a class="btn" href="https://github.com/ismat-spec/nn-playground" target="_blank" rel="noopener">View source on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="case-body wrap">
+
+  <section class="case-section">
+    <h2><span class="num">1</span>Project Scope &amp; Problem</h2>
+    <p>Neural networks are the machinery behind almost everything called "AI" today, and every
+    course teaches the same diagram of circles and arrows. But frameworks like TensorFlow hide
+    the actual mechanics so completely that it is possible to train models for months without
+    ever seeing what gradient descent <em>does</em>. I wanted to close that gap for myself the
+    hard way: implement the whole thing — forward pass, backpropagation, the optimiser — with
+    nothing but JavaScript arrays, and make the learning process visible enough that anyone can
+    watch it happen.</p>
+    <p>The scope was deliberately strict: no libraries at all, everything runs client-side in
+    the browser, and every important quantity — the decision boundary, the connection weights,
+    the loss curve — has to be visible live while the network trains.</p>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">2</span>My Role &amp; Solution</h2>
+    <p>Solo build. The result is a playground where you pick one of four datasets (blobs, XOR,
+    circles, two spirals), choose the architecture — up to three hidden layers, tanh or ReLU —
+    and press Train. Three live views update together: the <strong style="color:var(--ink)">decision
+    boundary</strong> heatmap repaints as the network's opinion of the plane changes, the
+    <strong style="color:var(--ink)">network diagram</strong> draws every connection with line
+    thickness proportional to its weight, and the <strong style="color:var(--ink)">loss curve</strong>
+    tracks training progress numerically.</p>
+    <p>Under the hood it is a multilayer perceptron with a sigmoid output trained on binary
+    cross-entropy, using minibatch stochastic gradient descent with momentum. The
+    backpropagation is the textbook chain rule, implemented by hand over plain arrays — about
+    sixty lines that taught me more than any lecture on the subject.</p>
+    <figure>
+      <img src="../assets/img/nn_playground.png" alt="The playground after solving the two-spirals dataset: the decision boundary wraps both spirals at 100% accuracy, beside the live network weight diagram and loss curve" loading="lazy">
+      <figcaption>The hardest dataset, solved: the learned decision boundary wraps both spirals at
+      100% accuracy. On the right, the live network diagram — blue positive weights, orange
+      negative, thickness proportional to magnitude.</figcaption>
+    </figure>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">3</span>Work Process</h2>
+    <p>The mathematics was the easy half; making training <em>behave</em> was the real project.
+    Three problems shaped the build:</p>
+    <ul>
+      <li><strong style="color:var(--ink)">Plain gradient descent stalls.</strong> My first
+      optimiser trained the easy datasets but flatlined around 60% accuracy on the spirals.
+      Adding momentum (0.9) and fixing the weight initialisation to Xavier scale got optimisation
+      unstuck — and taught me why every real framework ships with better-than-vanilla
+      optimisers.</li>
+      <li><strong style="color:var(--ink)">Representation beats size.</strong> Even with momentum,
+      raw (x, y) inputs crawl on the two-spirals set. The fix is not a bigger network — it is
+      better inputs. A features switch adds x², y², xy and two sine transforms, and the same
+      network then solves the spiral in seconds. I kept both modes in the UI deliberately,
+      because failing first is what makes the lesson land.</li>
+      <li><strong style="color:var(--ink)">Keeping the UI honest.</strong> Training runs in
+      measured bursts inside requestAnimationFrame, so the page stays responsive at ~60 fps while
+      thousands of epochs run, and the boundary you see is always the network's true current
+      state — never a cached picture.</li>
+    </ul>
+  </section>
+
+  <section class="case-section">
+    <h2><span class="num">4</span>Outcome &amp; Results</h2>
+    <p>The finished playground trains to 100% accuracy on all four datasets — circles and XOR in
+    a few hundred epochs with raw inputs, and the two-spirals benchmark in roughly two thousand
+    epochs once engineered features are enabled, all in seconds of real time in the browser.
+    More importantly, it demonstrates the concepts employers actually probe for: I can point at
+    the exact lines where backpropagation applies the chain rule, explain why momentum rescued
+    the spiral, and show — not just say — that feature engineering can beat model size.</p>
+    <p>It is also the most-played thing on this site: <a href="nn/index.html">launch it</a>,
+    watch a network fail on the spirals with raw inputs, flip the features switch, and watch the
+    same network win.</p>
+  </section>
+
+  <div class="pager">
+    <a class="btn" href="pathfinding-visualizer.html">← Prev: Pathfinding Visualiser</a>
+    <a class="btn" href="kernel-lab.html">Next: Convolution Kernel Lab →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="../index.html#projects">Projects</a>
+      <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
+    </div>
+    <div>© 2026 Mohammad Ismat Allam Bin Abdul Rahman · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic</div>
+  </div>
+</footer>
+
+</body>
+</html>
