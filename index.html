@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ismat Allam — AI & Data Engineering Portfolio</title>
-<meta name="description" content="Digital portfolio of Ismat Allam — AI & Data Engineering student at Nanyang Polytechnic. IoT safety monitoring, quantitative backtesting and interactive algorithm visualisation.">
+<meta name="description" content="Digital portfolio of Ismat Allam — AI & Data Engineering student at Nanyang Polytechnic. IoT safety monitoring, quantitative backtesting, and interactive machine-learning demos that run live in the browser.">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 </head>
@@ -30,15 +30,17 @@
 </nav>
 
 <header class="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
   <div class="wrap">
     <div class="kicker">AI &amp; Data Engineering · Nanyang Polytechnic</div>
     <h1>I build end-to-end data systems — from sensor to insight.</h1>
+    <span class="roles">I make <span id="roleText">real-time data pipelines</span><span class="cursor"></span></span>
     <p class="lead">
       Hi, I'm Ismat. I like taking a problem all the way through the pipeline:
-      collecting raw data, cleaning and storing it properly, writing the logic that
-      turns it into decisions, and putting the result on screen. Below are three
-      projects that walk that path — a wearable safety monitor, a 155-year market
-      backtest, and an interactive algorithm visualiser.
+      collecting raw data, cleaning and storing it properly, writing the logic that turns it
+      into decisions, and putting the result on screen. Below are five projects that walk that
+      path — three of them run <strong style="color:var(--ink)">live in your browser</strong>,
+      right inside this site.
     </p>
     <div class="btn-row">
       <a class="btn primary" href="#projects">View my projects</a>
@@ -56,52 +58,108 @@
 
 <section id="projects">
   <div class="wrap">
-    <h2 class="section-title">Projects</h2>
-    <p class="section-sub">Three end-to-end builds: an IoT safety pipeline, a quantitative
-    finance study, and a software-engineering piece you can play with live.</p>
+    <h2 class="section-title reveal">Projects</h2>
+    <p class="section-sub reveal">Five end-to-end builds across IoT, machine learning, quantitative
+    finance and software engineering. The animated cards are not videos — they are the actual
+    programs, running in miniature.</p>
 
     <div class="cards">
-      <a class="card" href="projects/safety-monitoring.html">
-        <div class="thumb"><img src="assets/img/dep_dashboard_top.png" alt="Live safety-monitoring dashboard with an active fall alert"></div>
-        <div class="body">
-          <h3>Construction Worker Safety Monitor</h3>
-          <p>Wearable IMU → BLE → Python detection engine → MariaDB → live dashboard.
-             Detects falls, slip-trip-falls and near misses in real time.</p>
-          <div class="chips"><span class="chip">Arduino Nesso N1</span><span class="chip">Python</span><span class="chip">BLE</span><span class="chip">MariaDB</span><span class="chip">Streamlit</span></div>
-          <span class="go">Read the case study →</span>
-        </div>
-      </a>
 
-      <a class="card" href="projects/quant-backtester.html">
-        <div class="thumb"><img src="assets/img/equity_curves.png" alt="Equity curves of trend-following strategies vs buy and hold, log scale"></div>
+      <div class="card featured reveal">
+        <a class="media" href="projects/safety-monitoring.html">
+          <img src="assets/img/dep_dashboard_top.png" alt="Live safety-monitoring dashboard with an active fall alert">
+        </a>
         <div class="body">
-          <h3>S&amp;P 500 Trend-Following Backtester</h3>
-          <p>A quantitative engine that tests trend-following against buy-and-hold on
-             155 years of real market data — with the risk numbers to match.</p>
-          <div class="chips"><span class="chip">Python</span><span class="chip">pandas</span><span class="chip">Quant finance</span><span class="chip">matplotlib</span></div>
-          <span class="go">Read the case study →</span>
+          <span class="tag">EG2A17 Data Engineering Project</span>
+          <h3><a href="projects/safety-monitoring.html">Construction Worker Safety Monitor</a></h3>
+          <p>A wearable that knows when a worker falls. Live IMU data streams over BLE into a
+             Python pipeline — validation, feature engineering, a fall-detection state machine —
+             lands in MariaDB, and surfaces as alerts on a real-time dashboard. Detects falls,
+             slip-trip-falls and near misses, tuned against staged ground-truth tests.</p>
+          <div class="chips"><span class="chip">Arduino Nesso N1</span><span class="chip">BLE</span><span class="chip">Python</span><span class="chip">MariaDB</span><span class="chip">Streamlit</span></div>
+          <div class="links-row">
+            <a href="projects/safety-monitoring.html">Case study →</a>
+            <a href="https://github.com/ismat-spec/dep" target="_blank" rel="noopener">Source ↗</a>
+          </div>
         </div>
-      </a>
+      </div>
 
-      <a class="card" href="projects/pathfinding-visualizer.html">
-        <div class="thumb"><img src="assets/img/pathfinding_astar.png" alt="A* search animating through a generated maze"></div>
+      <div class="card reveal">
+        <a class="media" href="projects/nn-playground.html" aria-label="Neural Network Playground">
+          <canvas id="miniNN" width="380" height="204"></canvas>
+          <span class="live-badge">LIVE</span>
+        </a>
         <div class="body">
-          <h3>Pathfinding Visualiser</h3>
-          <p>A*, Dijkstra, BFS and Greedy search animated on an interactive grid —
-             draw walls, generate mazes and race the algorithms. Runs live in your browser.</p>
-          <div class="chips"><span class="chip">JavaScript</span><span class="chip">Algorithms</span><span class="chip">HTML/CSS</span><span class="chip">Zero libraries</span></div>
-          <span class="go">Read the case study →</span>
+          <h3><a href="projects/nn-playground.html">Neural Network Playground</a></h3>
+          <p>A neural network training live in your browser — backpropagation written from
+             scratch, no libraries. This card is really training one right now.</p>
+          <div class="chips"><span class="chip">Machine learning</span><span class="chip">Backprop</span><span class="chip">JavaScript</span></div>
+          <div class="links-row">
+            <a href="projects/nn-playground.html">Case study →</a>
+            <a href="projects/nn/index.html">Play with it ▶</a>
+          </div>
         </div>
-      </a>
+      </div>
+
+      <div class="card reveal">
+        <a class="media" href="projects/pathfinding-visualizer.html" aria-label="Pathfinding Visualiser">
+          <canvas id="miniPath" width="380" height="204"></canvas>
+          <span class="live-badge">LIVE</span>
+        </a>
+        <div class="body">
+          <h3><a href="projects/pathfinding-visualizer.html">Pathfinding Visualiser</a></h3>
+          <p>A*, Dijkstra, BFS and Greedy Best-First animated on an interactive grid — draw
+             walls, add costly terrain, generate mazes, race the algorithms.</p>
+          <div class="chips"><span class="chip">Algorithms</span><span class="chip">Data structures</span><span class="chip">JavaScript</span></div>
+          <div class="links-row">
+            <a href="projects/pathfinding-visualizer.html">Case study →</a>
+            <a href="projects/pathfinding/index.html">Play with it ▶</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <a class="media" href="projects/kernel-lab.html" aria-label="Convolution Kernel Lab">
+          <canvas id="miniKernel" width="380" height="204"></canvas>
+          <span class="live-badge">LIVE</span>
+        </a>
+        <div class="body">
+          <h3><a href="projects/kernel-lab.html">Convolution Kernel Lab</a></h3>
+          <p>What a CNN's first layer sees, by hand: edit a 3×3 kernel and watch blur, sharpen
+             and edge detection happen to the image in real time.</p>
+          <div class="chips"><span class="chip">Computer vision</span><span class="chip">CNN intuition</span><span class="chip">Canvas</span></div>
+          <div class="links-row">
+            <a href="projects/kernel-lab.html">Case study →</a>
+            <a href="projects/kernels/index.html">Play with it ▶</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <a class="media" href="projects/quant-backtester.html">
+          <img src="assets/img/equity_curves.png" alt="Equity curves of trend-following strategies vs buy and hold, log scale">
+        </a>
+        <div class="body">
+          <h3><a href="projects/quant-backtester.html">S&amp;P 500 Trend-Following Backtester</a></h3>
+          <p>Does trend-following beat buy-and-hold? A Python backtesting engine answers with
+             155 years of real market data — dividends, Sharpe ratios and drawdowns included.</p>
+          <div class="chips"><span class="chip">Quant finance</span><span class="chip">Python</span><span class="chip">pandas</span></div>
+          <div class="links-row">
+            <a href="projects/quant-backtester.html">Case study →</a>
+            <a href="https://github.com/ismat-spec/sp500-trend-backtester" target="_blank" rel="noopener">Source ↗</a>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
 
 <section id="about" style="border-top:1px solid var(--hairline);">
   <div class="wrap">
-    <h2 class="section-title">About me</h2>
+    <h2 class="section-title reveal">About me</h2>
     <div class="about-grid">
-      <div>
+      <div class="reveal">
         <p>I'm a Diploma in AI &amp; Data Engineering student at Nanyang Polytechnic's School
         of Engineering. What I enjoy most is the unglamorous middle of a data project —
         validation, storage schemas, detection logic — because that's where a demo either
@@ -109,17 +167,18 @@
         <p>This year my team built a wearable safety monitor for construction workers, which
         meant working with live Bluetooth sensor streams, tuning detection thresholds against
         recorded ground truth, and keeping a database honest at 100 samples per second. On my
-        own time I apply the same pipeline thinking to other domains: financial backtesting
-        and classic computer-science algorithms.</p>
+        own time I apply the same pipeline thinking to other domains: training neural networks
+        I implemented myself, backtesting trading strategies over a century of market data, and
+        building interactive tools that make algorithms visible.</p>
         <p>I'm working towards roles in data engineering, software engineering and
         quantitative development.</p>
       </div>
-      <div class="skills">
+      <div class="skills reveal">
         <div class="skill"><b>Python</b>pandas · asyncio · Streamlit</div>
+        <div class="skill"><b>Machine learning</b>backprop · features · CNNs</div>
         <div class="skill"><b>Databases</b>MariaDB · SQLite · schema design</div>
         <div class="skill"><b>IoT &amp; sensors</b>Arduino · BLE · IMU data</div>
-        <div class="skill"><b>Data analysis</b>cleaning · features · metrics</div>
-        <div class="skill"><b>Web</b>JavaScript · HTML/CSS</div>
+        <div class="skill"><b>Web</b>JavaScript · HTML/CSS · Canvas</div>
         <div class="skill"><b>Tools</b>Git &amp; GitHub · matplotlib</div>
       </div>
     </div>
@@ -128,9 +187,9 @@
 
 <section id="contact" style="border-top:1px solid var(--hairline);">
   <div class="wrap">
-    <h2 class="section-title">Find me online</h2>
-    <p class="section-sub">The best places to see my work and get in touch.</p>
-    <div class="online">
+    <h2 class="section-title reveal">Find me online</h2>
+    <p class="section-sub reveal">The best places to see my work and get in touch.</p>
+    <div class="online reveal">
       <a href="https://www.linkedin.com/in/ismat-allam-7030122b6" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.46zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.8 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg>
         <span><b>LinkedIn</b><small>Professional profile &amp; experience</small></span>
@@ -155,10 +214,11 @@
       <a href="https://github.com/ismat-spec" target="_blank" rel="noopener">GitHub</a>
       <a href="mailto:ismatallam@gmail.com">ismatallam@gmail.com</a>
     </div>
-    <div>© 2026 Ismat Allam · Diploma in AI &amp; Data Engineering, Nanyang Polytechnic ·
-    Built by hand with HTML &amp; CSS, hosted on GitHub Pages.</div>
+    <div>© 2026 Mohammad Ismat Allam Bin Abdul Rahman · Diploma in AI &amp; Data Engineering,
+    Nanyang Polytechnic · Built by hand with HTML, CSS &amp; JavaScript, hosted on GitHub Pages.</div>
   </div>
 </footer>
 
+<script src="assets/home.js" defer></script>
 </body>
 </html>
