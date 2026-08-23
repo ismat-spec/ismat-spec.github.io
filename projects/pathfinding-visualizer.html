@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pathfinding Visualiser — Ismat Allam</title>
 <meta name="description" content="Case study: an interactive pathfinding visualiser — A*, Dijkstra, BFS and Greedy Best-First animated on a grid, built in vanilla JavaScript.">
-<link rel="stylesheet" href="../assets/style.css?v=3">
+<link rel="stylesheet" href="../assets/style.css?v=4">
 </head>
 <body>
 
@@ -69,8 +69,9 @@
     challenge, and start and target are draggable.</p>
     <figure>
       <img src="../assets/img/pathfinding_astar.png" alt="The visualiser after an A* run: blue visited cells and an orange shortest path threading through a generated maze" loading="lazy">
-      <figcaption>A* on a generated maze: 383 cells visited to find a 113-step shortest path in
-      3.2 ms. On the same maze, plain BFS visits 448 cells — the heuristic is doing real work.</figcaption>
+      <figcaption>A* on a generated maze: 137 cells visited to find a 60-step shortest path in
+      1.0 ms. On the same maze, plain BFS visits 294 cells — more than twice as many. The
+      heuristic is doing real work.</figcaption>
     </figure>
   </section>
 
@@ -95,7 +96,7 @@
     <h2><span class="num">4</span>Outcome &amp; Results</h2>
     <p>The finished app does exactly what I set out to make: a one-click, install-free playground
     where the differences between the algorithms stop being theory. Race them on the same maze
-    and the stats tell the story — A* reaches the target visiting roughly 15% fewer cells than BFS;
+    and the stats tell the story — A* typically reaches the target visiting far fewer cells than BFS — often less than half;
     Greedy finishes fastest but returns visibly longer paths; BFS ignores sand and pays for it in
     path cost. Searches on the 1,012-cell grid complete in tens of milliseconds, so the animation
     speed is purely a teaching control.</p>
